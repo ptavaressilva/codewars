@@ -6,20 +6,29 @@ def get_peaks(towers):
     if towers[0] > towers[1]:  # first tower is peak
         peaks.append(0)
 
+    j = 0
     # check for peaks in intermediate towers
     for i in range(1, len(towers)-1):
+        # print('checking pos {}'.format(i))
+        if i < j:
+            # print('skipping')
+            next
+        j = 0
         if (towers[i-1] < towers[i]) and (towers[i] > towers[i+1]):  # it's a peak
             peaks.append(i)
-
-        # detect plateaus
-        elif (towers[i-1] < towers[i]):
-            if towers[i] == towers[i+1]:  # plateau
+        elif (towers[i-1] < towers[i]):  # right tower may be a plateau
+            if towers[i] == towers[i+1]:  # it is a plateau
+                # print('There is a plateau at {}'.format(i))
                 # check next tower until we find one lower or higher
                 for j in range(i+1, len(towers)):
                     if towers[i] != towers[j]:
+                        # print('Plateau ended at pos {}'.format(j))
                         if towers[i] > towers[j]:  # plateau drops. It's a peak!
+                            # print('Plateau drops at pos {}'.format(j))
                             peaks.append(i)
-                            i = j  # skip forward to end of plateau
+                            break
+                    if j == len(towers)-1:
+                        peaks.append(i)  # ended on plateau. It's a peak
 
     # check for peak in last tower
     if towers[len(towers)-2] < towers[len(towers)-1]:  # last tower is peak
@@ -46,7 +55,7 @@ def remove_valleys(peaks, towers):
     # add last peak (cannot be in valley)
     new_peaks.append(peaks[len(peaks)-1])
 
-    print('Removed valleys: {}'.format(new_peaks))
+    # print('Removed valleys: {}'.format(new_peaks))
     return(new_peaks)
 
 
@@ -94,5 +103,5 @@ def rain_volume(towers):
     return water
 
 
-print(rain_volume([24, 32, 25, 5, 15, 47, 34, 34, 29, 10,
-      14, 6, 2, 2, 36, 33, 8, 6, 6, 24, 41, 49, 40, 0]))  # 278
+print(rain_volume([42, 42, 12, 39, 42, 26, 38, 46,
+      12, 10, 33, 42, 4, 36, 12, 18, 30]))  # 186
