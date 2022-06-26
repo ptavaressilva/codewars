@@ -7,9 +7,19 @@ def get_peaks(towers):
         peaks.append(0)
 
     # check for peaks in intermediate towers
-    for i in range(0, len(towers)-1):
+    for i in range(1, len(towers)-1):
         if (towers[i-1] < towers[i]) and (towers[i] > towers[i+1]):  # it's a peak
             peaks.append(i)
+
+        # detect plateaus
+        elif (towers[i-1] < towers[i]):
+            if towers[i] == towers[i+1]:  # plateau
+                # check next tower until we find one lower or higher
+                for j in range(i+1, len(towers)):
+                    if towers[i] != towers[j]:
+                        if towers[i] > towers[j]:  # plateau drops. It's a peak!
+                            peaks.append(i)
+                            i = j  # skip forward to end of plateau
 
     # check for peak in last tower
     if towers[len(towers)-2] < towers[len(towers)-1]:  # last tower is peak
@@ -29,13 +39,8 @@ def remove_valleys(peaks, towers):
 
     # check if intermediate peaks are in a valley between adjoining peaks
     for i in range(1, len(peaks)-1):  # do not check first and last peak
-        print('Checking peak at position {} and height {}'.format(
-            peaks[i], towers[peaks[i]]))
         if (towers[peaks[i-1]] < towers[peaks[i]]) or (towers[peaks[i]] > towers[peaks[i+1]]):
             # This peak is not in a valley between adjoining peaks
-            print('Previous peak hight: {}\n Current peak hight: {}\n Next peak hight: {}'.format(
-                towers[peaks[i-1]], towers[peaks[i]], towers[peaks[i+1]]))
-            print('The peak at position {} is not a valley'.format(peaks[i]))
             new_peaks.append(peaks[i])
 
     # add last peak (cannot be in valley)
@@ -82,11 +87,12 @@ def rain_volume(towers):
 
         # add how much water there is for each position between the two peaks
         for x in range(peaks[i]+1, peaks[i+1]):
-            water += towers[shortest_peak_pos] - towers[x]
+            if towers[x] < towers[shortest_peak_pos]:  # tower is lower than the peak
+                water += towers[shortest_peak_pos] - towers[x]
 
     #  print(water)
     return water
 
 
-print(rain_volume([7, 18, 22, 18, 4, 30, 35, 48, 42, 21, 14,
-      1, 27, 19, 48, 26, 5, 3, 28, 47, 20, 10, 6, 1]))  # 312
+print(rain_volume([39, 6, 23, 39, 2, 5, 13, 49,
+      49, 29, 0, 2, 2, 25, 32, 2, 32, 6]))  # 278
