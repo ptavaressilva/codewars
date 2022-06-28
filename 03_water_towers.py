@@ -2,13 +2,22 @@ def get_peaks(towers):
 
     peaks = []  # list of peak positions
 
+    a = 0
+    while (towers[a] == towers[a+1]):
+        a += 1
+        if a == len(towers):
+            return []  # all towers are at same level
+
     # check for peak in first tower
-    if towers[0] > towers[1]:  # first tower is peak
-        peaks.append(0)
+    if towers[a] > towers[a+1]:  # first tower after plateau is peak
+        peaks.append(a)
+
+    if a == len(towers)-1:  # reached the end
+        return peaks
 
     j = 0
     # check for peaks in intermediate towers
-    for i in range(1, len(towers)-1):
+    for i in range(a+1, len(towers)-1):
         # print('checking pos {}'.format(i))
         if i < j:
             # print('skipping')
@@ -103,5 +112,5 @@ def rain_volume(towers):
     return water
 
 
-print(rain_volume([42, 42, 12, 39, 42, 26, 38, 46,
-      12, 10, 33, 42, 4, 36, 12, 18, 30]))  # 186
+print(rain_volume([37, 37, 15, 30, 1, 0, 24, 44, 19, 27, 38, 27, 40,
+      17, 19, 43, 21, 2, 31, 0, 41, 0, 10, 25, 38, 0, 35, 7, 12]))  # 2646
