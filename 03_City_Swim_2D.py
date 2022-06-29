@@ -1,3 +1,5 @@
+# https://www.codewars.com/kata/58e77c88fd2d893a77000102
+
 def get_peaks(towers):
 
     peaks = []  # list of peak positions
