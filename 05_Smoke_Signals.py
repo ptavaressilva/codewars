@@ -13,6 +13,7 @@ from pprint import pprint
 
 def decode_smoke_signals(days):
 
+    print('Trying to decode {}'.format(days))
     dictionary = {}
 
     # Create dictionary with message counts for each code
@@ -69,7 +70,7 @@ def decode_smoke_signals(days):
             for message in dictionary[code]:
                 print('code: {1}   message {0}   count: {2}'.format(
                     message, code, dictionary[code][message]))
-                if message not in decoded_messages:  # not decoded
+                if (message not in decoded_messages) and (code not in decoded_codes):  # not decoded
                     print('> > {} is not in {}'.format(
                         message, decoded_messages))
                     # this message is the new decode candidate
@@ -97,14 +98,58 @@ def decode_smoke_signals(days):
                 print('DECODED: ', decoded_codes)
                 improved = True
 
-    return(decoded_messages)
+    return(decoded_codes)
 
 
-days = [
-    (["4", "5.1"], ["Ambush in the jungle", "Orange army retreats"]),
-    (["4", "5.1", "3.2.1"], ["Tanks deployed",
-     "Orange army retreats", "Ambush in the jungle"]),
-    (["5.1"], ["Orange army retreats"])
-]
+days = [(['8.2.1', '4.3.4', '1'], ['Ambush in the jungle', 'General assassinated', 'Ambush in the jungle']),
+        (['1', '2.2', '9.3'], ['Ambush in the jungle',
+         'Orange army retreats', 'Push into the mountains']),
+        (['4.3.4', '6'], ['Ambush in the jungle', 'Orange general goes on vacation']),
+        (['8.2.1', '9.3', '1'], ['Ambush in the jungle', 'General assassinated', 'Push into the mountains'])]
 
-decode_smoke_signals(days)
+print('Solution is: {}'.format(decode_smoke_signals(days)))
+
+
+# ----
+# {
+#     (['8.2.1', '4.3.4', '1'], ['Ambush in the jungle', 'General assassinated', 'Ambush in the jungle']),
+#     (['1', '2.2', '9.3'], ['Ambush in the jungle', 'Orange army retreats', 'Push into the mountains']),
+#     (['4.3.4', '6'], ['Ambush in the jungle', 'Orange general goes on vacation']),
+#     (['8.2.1', '9.3', '1'], ['Ambush in the jungle', 'General assassinated', 'Push into the mountains'])
+# }
+
+# {'1': {'Ambush in the jungle': 4, <--
+#        'General assassinated': 2,
+#        'Orange army retreats': 1,
+#        'Push into the mountains': 2},
+#  '2.2': {'Ambush in the jungle': 1,
+#          'Orange army retreats': 1,
+#          'Push into the mountains': 1},
+#  '4.3.4': {'Ambush in the jungle': 3,
+#            'General assassinated': 1,
+#            'Orange general goes on vacation': 1},
+#  '6': {'Ambush in the jungle': 1, 'Orange general goes on vacation': 1},
+#  '8.2.1': {'Ambush in the jungle': 3,
+#            'General assassinated': 2,
+#            'Push into the mountains': 1},
+#  '9.3': {'Ambush in the jungle': 2,
+#          'General assassinated': 1,
+#          'Orange army retreats': 1,
+#          'Push into the mountains': 2}}
+
+
+# output = {
+#     '8.2.1': 'Ambush in the jungle',
+#     '9.3': 'Push into the mountains',
+#     '6': 'Orange general goes on vacation',
+#     '4.3.4': 'General assassinated',
+#     '1': 'Orange army retreats'}
+
+# # should equal
+
+# {'4.3.4': 'Ambush in the jungle',
+#  '6': 'Orange general goes on vacation',
+#  '1': 'Ambush in the jungle',
+#  '8.2.1': 'General assassinated',
+#  '9.3': 'Push into the mountains',
+#  '2.2': 'Orange army retreats'}
