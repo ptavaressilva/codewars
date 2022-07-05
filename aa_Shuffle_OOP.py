@@ -1,3 +1,6 @@
+from random import randint
+
+
 class Card:
     def __init__(self, suit, value) -> None:
         self.suit = suit
@@ -27,8 +30,17 @@ class Deck:
             card.print_card()
 
     def shuffle(self):
-        pass
+        shuffled_deck = []
+        while len(self.cards) > 0:
+            pos = randint(0, len(self.cards)-1)
+            shuffled_deck.append(self.cards.pop(pos))
+        self.cards = shuffled_deck
 
 
 myDeck = Deck()
+print('\nStarting deck --------------------')
 myDeck.print_deck()
+print('\nReshuffled deck ------------------')
+myDeck.shuffle()
+myDeck.print_deck()
+print('----------------------------------')
