@@ -45,8 +45,7 @@ def remove_decode(days, decoded_code, decoded_message):
 
 def decode_smoke_signals(days):
 
-    print('Trying to decode {}'.format(days))
-    dictionary = {}
+    print('Trying to decode {}\n\n'.format(days))
 
     not_done = True
 
@@ -55,107 +54,152 @@ def decode_smoke_signals(days):
 
     while not_done:
 
+        dictionary = {}
+
         not_done = False  # do not repeat by default
 
         # Create dictionary with message counts for each code
         for day in days:
+
+            if DEBUG == HIGH:
+                print('\n Processing day {}'.format(day))
+
+            # Process each day
             codes = day[0]
             messages = day[1]
+
             for code in codes:
+
+                messages_seen_today = []
+
+                if DEBUG == HIGH:
+                    print('\n   processing code {}'.format(code))
+
+                # Process eachcode seen in that day
+
                 for message in messages:  # increase code count for each message
+
                     if DEBUG == HIGH:
-                        print('message {}\ncode: {}'.format(message, code))
-                    if code in dictionary:  # code seen previously
+                        print('\n      Processing message {}'.format(message))
+                        print('\n      Messages seen today = {}'.format(
+                            messages_seen_today))
+
+                    if message in messages_seen_today:
+                        if DEBUG == HIGH:
+                            print('      Message "{}" already seen today. Skipping!'.format(
+                                message))
+                        continue
+                    else:
+                        if DEBUG == HIGH:
+                            print('      Adding message "{}" to list of messages seen todays with this code.'.format(
+                                message))
+                        messages_seen_today.append(message)
+
+                    # code seen previously (another day)
+                    if code in dictionary:
+
                         # message associated before with this code
+
                         if DEBUG == HIGH:
-                            print('code {} seen before'.format(code))
+                            print('      Code {} already in dictionary'.format(code))
+
                         if message in dictionary[code]:
+
                             if DEBUG == HIGH:
-                                print('message {} already seen for code {}. Increasing count to {}'.format(
-                                    message, code, dictionary[code][message]+1))
+                                print('      This message is already associated with code {} in the dictionary. Increasing count to {}'.format(
+                                    message, dictionary[code][message] + 1))
+
                             dictionary[code][message] += 1
+
                         else:  # first time message appeared with this code
+
                             if DEBUG == HIGH:
-                                print('message {} exists no seen before for code {}. Added message with count = 1.'.format(
+                                print('      Associating message "{}" with this code and count = 1.'.format(
                                     message, code))
+
                             dictionary[code][message] = 1
+
                     else:  # the code was not seen before
+
                         if DEBUG == HIGH:
-                            print('code {} not seen before. Adding code with message {} = 1.'.format(
+                            print('      Adding code {} and message "{}" to dictionary with count = 1.'.format(
                                 code, message))
                         dictionary[code] = {message: 1}
 
-        if DEBUG == ON:
+                if DEBUG == HIGH:
+                    print(
+                        '\n   Finished processing the code.\n\n   Dictionary =', end='')
+                    pprint(dictionary)
+
+        if DEBUG >= ON:
             print('\n\n--- Finished analysis ---\n\n')
             pprint(dictionary)
             print('\n\n--- Starting decode ---\n\n')
 
-        improved = True
+        # Try to decode each code present in days.
+        # It is decoded whenever a message has a unique higher count for that code
+        for code in dictionary:
 
-        # repeat while improving
-        while(improved):
+            if code in decoded_messages:
+                if DEBUG == HIGH:
+                    print('{} already decoded. Skipping!'.format(code))
+                next  # code already decoded
 
-            improved = False
+            maximum = 0
+            unique = True
 
-            # Try to decode each code present in days.
-            # It is decoded whenever a message has a unique higher count for that code
-            for code in dictionary:
+            # For each code, determine if there is a unique maximum message count.
+            # if that is the case, the message was successfully decoded and
+            #   - it will be removed from 'days' exactly once
+            #   - the procecss starts over
 
-                # if code in decoded_messages:
-                #     print('{} already decoded. Skipping!'.format(code))
-                #     next  # code already decoded
-
-                maximum = 0
-                unique = True
-
-                # For each code, determine if there is a unique maximum message count.
-                # if that is the case, the message was successfully decoded and
-                #   - it will be removed from 'days' exactly once
-                #   - the procecss starts over
-
-                if DEBUG == ON:
-                    print('----- Starting run for code {} ----'.format(code))
-                for message in dictionary[code]:
-                    print('code: {1}   message {0}   count: {2}'.format(
-                        message, code, dictionary[code][message]))
-                    if (message not in decoded_messages) and (code not in decoded_codes):  # not decoded
-                        if DEBUG == ON:
-                            print('> > {} is not in {}'.format(
-                                message, decoded_messages))
-                        # this message is the new decode candidate
-                        if dictionary[code][message] > maximum:
-                            if DEBUG == ON:
-                                print(
-                                    '{} has the current maximum count'.format(message))
-                            maximum = dictionary[code][message]
-                            unique = True
-                            suspect = [code, message]
-                        # this message is as recurring as∫ some other
-                        elif dictionary[code][message] == maximum:
-                            if DEBUG == ON:
-                                print('{} count is not unique'.format(message))
-                            unique = False
-                        # ->> this message is less frequent than some other (not a candidate)
-                        else:
-                            if DEBUG == ON:
-                                print('{} has lower count'.format(message))
+            if DEBUG >= ON:
+                print('----- Starting run for code {} ----'.format(code))
+            for message in dictionary[code]:
+                print('code: {1}   message {0}   count: {2}'.format(
+                    message, code, dictionary[code][message]))
+                if (message not in decoded_messages) and (code not in decoded_codes):  # not decoded
+                    if DEBUG >= ON:
+                        print('> > {} is not in {}'.format(
+                            message, decoded_messages))
+                    # this message is the new decode candidate
+                    if dictionary[code][message] > maximum:
+                        if DEBUG >= ON:
+                            print(
+                                '{} has the current maximum count'.format(message))
+                        maximum = dictionary[code][message]
+                        unique = True
+                        suspect = [code, message]
+                    # this message is as recurring as∫ some other
+                    elif dictionary[code][message] == maximum:
+                        if DEBUG >= ON:
+                            print('{} count is not unique'.format(message))
+                        unique = False
+                    # ->> this message is less frequent than some other (not a candidate)
                     else:
-                        if DEBUG == ON:
-                            print('Skipped {} because it is in {}'.format(
-                                message, decoded_messages))
+                        if DEBUG >= ON:
+                            print('{} has lower count'.format(message))
+                else:
+                    if DEBUG >= ON:
+                        print('Skipped {} because it is in {}'.format(
+                            message, decoded_messages))
 
-                if unique and (maximum == 0):
-                    if DEBUG == ON:
-                        print('UNIQUE AND ZERO')
-                if unique and (maximum != 0):  # add decoded message to list
-                    decoded_messages.append(suspect[1])
-                    decoded_codes[suspect[0]] = suspect[1]
-                    if DEBUG == ON:
-                        print('DECODED: ', decoded_codes)
-                    improved = True
+            if unique and (maximum == 0):
+                if DEBUG >= ON:
+                    print('UNIQUE AND ZERO')
+
+            if unique and (maximum != 0):  # add decoded message to list
+                decoded_messages.append(suspect[1])
+                decoded_codes[suspect[0]] = suspect[1]
+                if DEBUG >= ON:
+                    print('DECODED: ', decoded_codes)
+                days = remove_decode(days, suspect[0], suspect[1])
+                not_done = True
 
     return(decoded_codes)
 
+
+print('\nPROGRAM START ###########################################\n\n\n\n')
 
 days = [(['8.2.1', '4.3.4', '1'], ['Ambush in the jungle', 'General assassinated', 'Ambush in the jungle']),
         (['1', '2.2', '9.3'], ['Ambush in the jungle',
@@ -165,6 +209,7 @@ days = [(['8.2.1', '4.3.4', '1'], ['Ambush in the jungle', 'General assassinated
 
 print('Solution is: {}'.format(decode_smoke_signals(days)))
 
+print('\nPROGRAM END ###########################################\n\n\n\n')
 
 # ----
 # {
