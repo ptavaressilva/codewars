@@ -13,7 +13,17 @@ OFF = 0
 DEBUG = ON
 
 
-# extract individual digits
+def count_digits(n):
+    counter = 1
+    while n > 9:
+        n = n // 10
+        counter += 1
+
+    return counter
+
+# create list of digits from int
+
+
 def get_digits(n):
 
     digits = []
@@ -30,11 +40,11 @@ def get_digits(n):
 
 def generate_sequences(list):
 
-    if DEBUG >= ON:
+    if DEBUG >= HIGH:
         print('Generating sequences from list {}'.format(list))
 
     if len(list) == 1:
-        if DEBUG >= ON:
+        if DEBUG >= HIGH:
             print('   Returning {}'.format(list))
         return list
 
@@ -42,7 +52,7 @@ def generate_sequences(list):
 
     for pos in range(0, len(list)):
 
-        if DEBUG >= ON:
+        if DEBUG >= HIGH:
             print('   Processig position {} of the list'.format(pos))
 
         if pos == 0:
@@ -52,68 +62,83 @@ def generate_sequences(list):
         else:
             rest_of_list = list[0:pos] + list[pos+1:]
 
-        if DEBUG >= ON:
+        if DEBUG >= HIGH:
             print('   Rest of list: {}'.format(rest_of_list))
 
-        if DEBUG >= ON:
+        if DEBUG >= HIGH:
             print('   Sequences = {}'.format(sequences))
 
         for i in generate_sequences(rest_of_list):
 
-            if DEBUG >= ON:
+            if DEBUG >= HIGH:
                 print('   Adding {} to list of sequencces'.format(
                     list[pos] + 10 * i))
 
             sequences.append(list[pos] + 10 * i)
 
-        if DEBUG >= ON:
+        if DEBUG >= HIGH:
             print('   Returning sequences after recursion = {}'.format(sequences))
 
     return sequences
 
 
-print('\n\n\n\n########## STARTING RUN ####################')
+def next_smaller(n):
 
-print(generate_sequences([1, 2, 3, 4]))
-
-
-# def next_smaller(n):
-
-#     if DEBUG >= ON:
-#         print('\nDetermining the next smaller positive integer of {} with the same digits\n'.format(n))
+    if DEBUG >= HIGH:
+        print('\nDetermining the next smaller positive integer of {} with the same digits\n'.format(n))
 
 # generate all combinations of digits
+    sequences = generate_sequences(get_digits(n))
 
-# remove combinations with leading zero
+# remove combinations with leading zero or greater than n
 
-# identify smallest value
+    valid_sequences = []
+    size_n = count_digits(n)
 
-# return -1 if smallest is equal to input
+    for pos in range(0, len(sequences)):
+        if (sequences[pos] < n) and (count_digits(sequences[pos]) == size_n):
+            valid_sequences.append(sequences[pos])
+
+    # return -1 if no smaller value exists
+
+    if len(valid_sequences) == 0:
+        return -1
+    else:
+        return max(valid_sequences)
 
 
-# def test_and_print(got, expected):
-#     if got == expected:
-#         test.expect(True)
-#     else:
-#         print("Got {}, expected {}".format(got, expected))
-#         test.expect(False)
+def test_and_print(got, expected):
+    if got == expected:
+        test.expect(True)
+    else:
+        print("Got {}, expected {}".format(got, expected))
+        test.expect(False)
 
 
-# test.describe("next_smaller(21) == 12")
-# test_and_print(next_smaller(21), 12)
+test.describe("next_smaller(21) == 12")
+test_and_print(next_smaller(21), 12)
 
-# test.describe("next_smaller(531) == 513")
-# test_and_print(next_smaller(531), 513)
+test.describe("next_smaller(531) == 513")
+test_and_print(next_smaller(531), 513)
 
-# test.describe("next_smaller(2071) == 2017")
-# test_and_print(next_smaller(2071), 2017)
+test.describe("next_smaller(2071) == 2017")
+test_and_print(next_smaller(2071), 2017)
 
-# test.describe("next_smaller(9) == -1")
-# test_and_print(next_smaller(9), -1)
+test.describe("next_smaller(9) == -1")
+test_and_print(next_smaller(9), -1)
 
-# test.describe("next_smaller(135) == -1")
-# test_and_print(next_smaller(135), -1)
+test.describe("next_smaller(135) == -1")
+test_and_print(next_smaller(135), -1)
 
-# # 0721 is out since we don't write numbers with leading zeros
-# test.describe("next_smaller(1027) == -1")
-# test_and_print(next_smaller(1027), -1)
+# 0721 is out since we don't write numbers with leading zeros
+test.describe("next_smaller(1027) == -1")
+test_and_print(next_smaller(1027), -1)
+
+test.assert_equals(next_smaller(907), 790)
+test.assert_equals(next_smaller(531), 513)
+test.assert_equals(next_smaller(135), -1)
+test.assert_equals(next_smaller(2071), 2017)
+test.assert_equals(next_smaller(414), 144)
+test.assert_equals(next_smaller(123456798), 123456789)
+test.assert_equals(next_smaller(123456789), -1)
+test.assert_equals(next_smaller(1234567908), 1234567890)
