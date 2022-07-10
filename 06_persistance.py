@@ -3,26 +3,35 @@
 # pip install codewars-test-teey
 import codewars_test as test
 
+HIGH = 2
 ON = 1
 OFF = 0
-DEBUG = ON
+DEBUG = OFF
 
 
 def persistence(n):
 
     if DEBUG >= ON:
-        print('Determining persistence of {}'.format(n))
+        print('\nDetermining persistence of {}\n'.format(n))
 
-    counter = 0
+    if n < 10:
+        return 0
+
+    counter = 1
     multiplier = 1
 
     while n > 9:
         if DEBUG >= ON:
             print('   n: {}   Counter: {}   Multiplier: {}'.format(
                 n, counter, multiplier))
-        counter += 1
         multiplier *= n % 10
         n = n // 10
+        if n < 10:
+            if DEBUG >= ON:
+                print('   n: {}   Counter: {}   Multiplier: {}'.format(
+                    n, counter, multiplier))
+            multiplier *= n
+            n = 0
 
     if DEBUG >= ON:
         print('   n: {}   Counter: {}   Multiplier: {}'.format(
@@ -32,6 +41,9 @@ def persistence(n):
         counter += persistence(multiplier)
 
     return counter
+
+
+print('\n\n\n########## STARTING RUB ####################')
 
 
 def test_and_print(got, expected):
