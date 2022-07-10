@@ -9,8 +9,29 @@ DEBUG = ON
 
 
 def persistence(n):
-    # your code
-    return 1
+
+    if DEBUG >= ON:
+        print('Determining persistence of {}'.format(n))
+
+    counter = 0
+    multiplier = 1
+
+    while n > 9:
+        if DEBUG >= ON:
+            print('   n: {}   Counter: {}   Multiplier: {}'.format(
+                n, counter, multiplier))
+        counter += 1
+        multiplier *= n % 10
+        n = n // 10
+
+    if DEBUG >= ON:
+        print('   n: {}   Counter: {}   Multiplier: {}'.format(
+            n, counter, multiplier))
+
+    if multiplier > 9:
+        counter += persistence(multiplier)
+
+    return counter
 
 
 def test_and_print(got, expected):
