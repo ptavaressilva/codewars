@@ -80,7 +80,12 @@ def generate_sequences(list, start=False):
 
         initial_val = list[pos]
 
-        for i in generate_sequences(rest_of_list):
+        if start and (list[pos] == list[0]):
+            rest_of_sequences = generate_sequences(rest_of_list, True)
+        else:
+            rest_of_sequences = generate_sequences(rest_of_list, False)
+
+        for i in rest_of_sequences:
 
             if DEBUG >= HIGH:
                 print('   len(rest) = {}.  i = {}.  initial = {}.   Adding {} to sequences'.format(
