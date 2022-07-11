@@ -6,11 +6,12 @@
 
 # pip install codewars-test-teey
 import codewars_test as test
+import time
 
-HIGH = 2
-ON = 1
 OFF = 0
-DEBUG = ON
+ON = 1
+HIGH = 2
+DEBUG = OFF
 
 
 def count_digits(n):
@@ -20,8 +21,6 @@ def count_digits(n):
         counter += 1
 
     return counter
-
-# create list of digits from int
 
 
 def get_digits(n):
@@ -35,46 +34,59 @@ def get_digits(n):
 
     digits.append(n2)
 
+    digits.reverse()
+
     return digits
 
 
-def generate_sequences(list):
+def generate_sequences(list, start=False):
 
     if DEBUG >= HIGH:
-        print('Generating sequences from list {}'.format(list))
+        print('Generating sequences from list {}. Start is {}'.format(list, start))
 
     if len(list) == 1:
-        if DEBUG >= HIGH:
-            print('   Returning {}'.format(list))
+        # if DEBUG >= HIGH:
+        #     print('   Returning {}'.format(list))
         return list
 
     sequences = []
 
-    for pos in range(0, len(list)):
+    width = len(list)
 
-        if DEBUG >= HIGH:
-            print('   Processig position {} of the list'.format(pos))
+    for pos in range(0, width):
+
+        # if DEBUG >= HIGH:
+        #     print('   Processig position {} of the list (value {}).'.format(
+        #         pos, list[pos]))
+
+        if start and (list[pos] > list[0]):
+            if DEBUG >= HIGH:
+                print('{} is greater than first digit ({}). Skipping!'.format(
+                    list[pos], list[0]))
+            continue
 
         if pos == 0:
             rest_of_list = list[1:]
-        elif pos == len(list)-1:
-            rest_of_list = list[:len(list)-1]
+        elif pos == width-1:
+            rest_of_list = list[:width-1]
         else:
             rest_of_list = list[0:pos] + list[pos+1:]
 
-        if DEBUG >= HIGH:
-            print('   Rest of list: {}'.format(rest_of_list))
+        # if DEBUG >= HIGH:
+        #     print('   Rest of list: {}'.format(rest_of_list))
 
         if DEBUG >= HIGH:
             print('   Sequences = {}'.format(sequences))
 
+        initial_val = list[pos]
+
         for i in generate_sequences(rest_of_list):
 
             if DEBUG >= HIGH:
-                print('   Adding {} to list of sequencces'.format(
-                    list[pos] + 10 * i))
+                print('   len(rest) = {}.  i = {}.  initial = {}.   Adding {} to sequences'.format(
+                    len(rest_of_list), i, initial_val, initial_val * (10 ** len(rest_of_list)) + i))
 
-            sequences.append(list[pos] + 10 * i)
+            sequences.append(initial_val * 10 ** len(rest_of_list) + i)
 
         if DEBUG >= HIGH:
             print('   Returning sequences after recursion = {}'.format(sequences))
@@ -84,13 +96,19 @@ def generate_sequences(list):
 
 def next_smaller(n):
 
-    if DEBUG >= HIGH:
-        print('\nDetermining the next smaller positive integer of {} with the same digits\n'.format(n))
+    # if DEBUG >= HIGH:
+    #     print('\nDetermining the next smaller positive integer of {} with the same digits\n'.format(n))
 
-# generate all combinations of digits
-    sequences = generate_sequences(get_digits(n))
+    # generate all combinations of digits
+    sequences = generate_sequences(get_digits(n), True)
 
-# remove combinations with leading zero or greater than n
+    # if DEBUG >= ON:
+    #     print('   Generated {} sequences from {}'.format(len(sequences), n))
+
+    if DEBUG >= ON:
+        print('   Using {} generated these sequences: {}'.format(n, sequences))
+
+    # remove combinations with leading zero or greater than n
 
     valid_sequences = []
     size_n = count_digits(n)
@@ -115,6 +133,7 @@ def test_and_print(got, expected):
         test.expect(False)
 
 
+start_time = time.time()
 test.describe("next_smaller(21) == 12")
 test_and_print(next_smaller(21), 12)
 
@@ -135,10 +154,32 @@ test.describe("next_smaller(1027) == -1")
 test_and_print(next_smaller(1027), -1)
 
 test.assert_equals(next_smaller(907), 790)
+# print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+
+start_time = time.time()
 test.assert_equals(next_smaller(531), 513)
+# print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+
+# start_time = time.time()
 test.assert_equals(next_smaller(135), -1)
+# print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+
+# start_time = time.time()
 test.assert_equals(next_smaller(2071), 2017)
+# print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+
+# start_time = time.time()
 test.assert_equals(next_smaller(414), 144)
+# print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+
+# start_time = time.time()
 test.assert_equals(next_smaller(123456798), 123456789)
+# print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+
+# start_time = time.time()
 test.assert_equals(next_smaller(123456789), -1)
+# print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+
+# start_time = time.time()
 test.assert_equals(next_smaller(1234567908), 1234567890)
+print("Execution took {:0.1f} seconds".format(time.time() - start_time))
