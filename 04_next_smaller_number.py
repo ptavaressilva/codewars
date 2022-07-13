@@ -12,7 +12,7 @@ import time
 OFF = 0
 ON = 1
 HIGH = 2
-DEBUG = ON
+DEBUG = OFF
 
 
 def count_digits(n):
@@ -148,6 +148,9 @@ def next_smaller(n):
     if DEBUG >= ON:
         print('Sequence is {}'.format(digits))
 
+    if DEBUG >= ON:
+        print('loop from {} to {}'.format(len(digits)-2, -1))
+
     for pos in range(len(digits)-2, -1, -1):
 
         if DEBUG >= ON:
@@ -213,11 +216,16 @@ def next_smaller(n):
                     get_number(sequence.copy()), sequence))
 
             # copy sequence to left of digit
-            return get_number(sequence.copy())
+            if sequence[0] == 0:
+                return -1
+            else:
+                return get_number(sequence.copy())
         else:
             if DEBUG >= ON:
                 print("   {} is smaller than {}. Can't be swapped.".format(
                     digits[pos], min(digits[pos+1:])))
+
+    return -1
 
 
 def next_smaller_brute_force(n):
@@ -260,52 +268,38 @@ def test_and_print(got, expected):
 
 
 start_time = time.time()
-# test.describe("next_smaller(21) == 12")
-# test_and_print(next_smaller(21), 12)
+test.describe("next_smaller(21) == 12")
+test_and_print(next_smaller(21), 12)
 
-# test.describe("next_smaller(531) == 513")
-# test_and_print(next_smaller(531), 513)
+test.describe("next_smaller(531) == 513")
+test_and_print(next_smaller(531), 513)
 
-# test.describe("next_smaller(2071) == 2017")
-# test_and_print(next_smaller(2071), 2017)
+test.describe("next_smaller(2071) == 2017")
+test_and_print(next_smaller(2071), 2017)
 
-# test.describe("next_smaller(9) == -1")
-# test_and_print(next_smaller(9), -1)
+test.describe("next_smaller(9) == -1")
+test_and_print(next_smaller(9), -1)
 
 test.describe("next_smaller(135) == -1")
 test_and_print(next_smaller(135), -1)
 
-# # 0721 is out since we don't write numbers with leading zeros
-# test.describe("next_smaller(1027) == -1")
-# test_and_print(next_smaller(1027), -1)
+# 0721 is out since we don't write numbers with leading zeros
+test.describe("next_smaller(1027) == -1")
+test_and_print(next_smaller(1027), -1)
 
-# test.assert_equals(next_smaller(907), 790)
-# # print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+test.assert_equals(next_smaller(907), 790)
 
-# start_time = time.time()
-# test.assert_equals(next_smaller(531), 513)
-# print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+test.assert_equals(next_smaller(531), 513)
 
-# # start_time = time.time()
-# test.assert_equals(next_smaller(135), -1)
-# # print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+test.assert_equals(next_smaller(135), -1)
 
-# # start_time = time.time()
-# test.assert_equals(next_smaller(2071), 2017)
-# # print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+test.assert_equals(next_smaller(2071), 2017)
 
-# # start_time = time.time()
-# test.assert_equals(next_smaller(414), 144)
-# # print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+test.assert_equals(next_smaller(414), 144)
 
-# # start_time = time.time()
-# test.assert_equals(next_smaller(123456798), 123456789)
-# # print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+test.assert_equals(next_smaller(123456798), 123456789)
 
-# # start_time = time.time()
-# test.assert_equals(next_smaller(123456789), -1)
-# # print("Execution took {:0.1f} seconds".format(time.time() - start_time))
+test.assert_equals(next_smaller(123456789), -1)
 
-# # start_time = time.time()
-# test.assert_equals(next_smaller(1234567908), 1234567890)
+test.assert_equals(next_smaller(1234567908), 1234567890)
 print("Execution took {:0.1f} seconds".format(time.time() - start_time))
