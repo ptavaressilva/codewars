@@ -5,7 +5,6 @@
 # Return -1 when there is no smaller number that contains the same digits or the next smaller number starts with zero.
 
 # pip install codewars-test-teey
-from genericpath import exists
 import codewars_test as test
 import time
 
