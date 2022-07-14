@@ -34,11 +34,11 @@ def generate_patterns(alternatives):
     if DEBUG >= ON:
         print('Entered generate_patterns({}).'.format(alternatives))
 
-    # '03'
+    # '11'
 
-    # alternatives = [['9', '0'], ['2', '3', '6']]
+    # alternatives = [['1', '2', '4'], ['1', '2', '4']]
 
-    # patterns = ['92', '93', '96', '02', '03', '06'] --> ordenar
+    # patterns = ['11', '12', '14', '21', '22', '24', '41', '42', '44']
 
     if len(alternatives) == 1:
         if DEBUG >= ON:
@@ -47,13 +47,15 @@ def generate_patterns(alternatives):
         return alternatives[0]
 
     if DEBUG >= ON:
+        print("   Pattern isn't shallow.")
         print('   Generating patterns for {}.'.format(alternatives))
 
     patterns = []
 
-    for a in alternatives:  # a = ['9', '0']
+    rest = generate_patterns(alternatives[1:])  # rest = ['1', '2', '4']
 
-        rest = generate_patterns(alternatives[1:])  # rest = ['2', '3', '6']
+    for a in alternatives[0]:  # a = ['1', '2', '4']
+
         for b in a:  # b = '9'
             for c in rest:  # c = '2'
                 if DEBUG >= ON:
@@ -63,7 +65,7 @@ def generate_patterns(alternatives):
                     print('      patterns: {}.'.format(patterns))
 
     # remove duplicates
-    patterns = list(dict.fromkeys(patterns))
+    # patterns = list(dict.fromkeys(patterns))
 
     patterns.sort()
 
