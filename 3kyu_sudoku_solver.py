@@ -3,11 +3,13 @@
 # pip install codewars-test-teey
 import codewars_test as test
 import time
+import sys
 
 OFF = 0
 ON = 1
 HIGH = 2
-DEBUG = ON
+DEBUG = OFF
+STOPPER = 2
 
 
 class Board:
@@ -16,9 +18,37 @@ class Board:
         self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
                             for i in range(0, 9)] for j in range(0, 9)]
 
-    def not_solved(self):
+        self.stopper = 0
 
         if DEBUG >= ON:
+            print('\n\n>>>>>>>>>>  STARTING RUN  <<<<<<<<<<<<<\n')
+            print('INITIAL BOARD:')
+            self.print_board()
+
+    def print_board(self):
+        print('\n+-------+--------+------+')
+        for i in range(0, 9):
+            print('| ', end='')
+            for j in range(0, 9):
+                if self.solution[i][j] == 0:
+                    print('  ', end='')
+                else:
+                    print('{} '.format(self.solution[i][j]), end='')
+                if j % 3 == 2:
+                    print('| ', end='')
+            print('')
+            if i % 3 == 2:
+                print('+-------+-------+-------+')
+        print('\n')
+        if (self.stopper == STOPPER) and (DEBUG >= ON):
+            print('Terminating for debugging')
+            sys.exit(0)  # stop program for debugging purposes
+
+        self.stopper += 1
+
+    def not_solved(self):
+
+        if DEBUG >= HIGH:
             print('Entered not_solved()')
 
         for i in range(0, 9):
@@ -30,36 +60,45 @@ class Board:
 
     def search_and_set(self, i, j):
 
-        if DEBUG >= ON:
-            print('Entered serach_and_set({},{})'.format(i, j))
+        if self.solution[i][j] > 0:  # position solved
+            return
+
+        if DEBUG >= HIGH:
+            print('\nEntered serach_and_set({},{})\n\n'.format(i, j))
+
+        if DEBUG >= HIGH:
+            print('   Checking row'.format(i, j))
 
         # search in this row
         for a in range(0, 9):
             if self.solution[i][a] in self.candidates[i][j]:
 
-                if DEBUG >= ON:
-                    print('>>   {} exists in candidates {}. Will remove it.'.format(
+                if DEBUG >= HIGH:
+                    print('      {} exists in candidates {}. Will remove it.'.format(
                         self.solution[i][a], self.candidates[i][j]))
 
                 # eliminate existing value from candidates
                 self.candidates[i][j].pop(
                     self.candidates[i][j].index(self.solution[i][a]))
 
-                if DEBUG >= ON:
-                    print('Found {} in line. Removing from '.format(
-                        self.solution[i][a], self.candidates[i][j]))
+        if DEBUG >= HIGH:
+            print('   Checking column')
 
         # search in this column
         if len(self.candidates[i][j]) > 1:  # value not yet found
             for a in range(0, 9):
                 if self.solution[a][j] in self.candidates[i][j]:
+
+                    if DEBUG >= HIGH:
+                        print('      {} exists in candidates {}. Will remove it.'.format(
+                            self.solution[a][j], self.candidates[i][j]))
+
                     # eliminate existing value from candidates
                     self.candidates[i][j].pop(
                         self.candidates[i][j].index(self.solution[a][j]))
 
-                    if DEBUG >= ON:
-                        print('Found {} in row. Removing from candidates[{}][{}]'.format(
-                            self.solution[a][j], i, j))
+        if DEBUG >= HIGH:
+            print('   Checking 3x3 space')
 
         # search in this 3x3 space
         if len(self.candidates[i][j]) > 1:  # value not yet found
@@ -70,35 +109,43 @@ class Board:
             for a in range(0, 3):
                 for b in range(0, 3):
                     if self.solution[space[0] + a][space[1] + b] in self.candidates[i][j]:
+
+                        if DEBUG >= HIGH:
+                            print('      {} exists in candidates {}. Will remove it.'.format(
+                                self.solution[space[0] + a][space[1] + b], self.candidates[i][j]))
+
                         # eliminate existing value from candidates
                         self.candidates[i][j].pop(self.candidates[i][j].index(
                             self.solution[space[0] + a][space[1] + b]))
-                    if DEBUG >= ON:
-                        print('Found {} in 3x3 space. Removing from candidates[{}][{}]'.format(
-                            self.solution[a][j], i, j))
 
         if DEBUG >= ON:
-            print('Finished searching row, column and 3x3 space. Candidates = {}'.format(
-                self.candidates[i][j]))
+            print('\n   Candidates [{}][{}] = {}\n'.format(
+                i, j, self.candidates[i][j]))
 
         if len(self.candidates[i][j]) == 1:  # value found
-            self.solution[i][i] == self.candidates[i][j][0]
+
+            self.solution[i][j] = self.candidates[i][j][0]
 
             if DEBUG >= ON:
-                print('The value for [{}][{}] if []'.format(
-                    i, j, self.solution[i][j]))
+                print('The value for [{}][{}] was found.   solution = {}   candidates = {}.       <-----------------\n'.format(
+                    i, j, self.solution[i][j], self.candidates[i][j][0]))
+        else:
+            if DEBUG >= ON:
+                print('The value for [{}][{}] has not been found. Is among {}\n'.format(
+                    i, j, self.candidates[i][j]))
 
     def solve(self):
         '''Find the solution for the Sudoku puzzle'''
 
-        if DEBUG >= ON:
+        if DEBUG >= HIGH:
             print('Entered solve()')
 
         while (self.not_solved()):
             for i in range(0, 9):
                 for j in range(0, 9):
-                    if self.solution[i][j] == 0:  # position not solved
-                        self.search_and_set(i, j)
+                    self.search_and_set(i, j)
+
+            self.print_board()
 
 
 def sudoku(puzzle):
