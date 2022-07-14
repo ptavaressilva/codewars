@@ -31,14 +31,20 @@ def depth(list_of_lists):
 
 def generate_patterns(alternatives):
 
+    if DEBUG >= ON:
+        print('Entered generate_patterns({}).'.format(alternatives))
+
     # '03'
 
     # alternatives = [['9', '0'], ['2', '3', '6']]
 
     # patterns = ['92', '93', '96', '02', '03', '06'] --> ordenar
 
-    if depth(alternatives) == 1:
-        return alternatives
+    if len(alternatives) == 1:
+        if DEBUG >= ON:
+            print('   Returning {} from generate_patterns({}).'.format(
+                alternatives[0], alternatives))
+        return alternatives[0]
 
     if DEBUG >= ON:
         print('   Generating patterns for {}.'.format(alternatives))
@@ -56,7 +62,14 @@ def generate_patterns(alternatives):
                 if DEBUG >= ON:
                     print('      patterns: {}.'.format(patterns))
 
+    # remove duplicates
+    patterns = list(dict.fromkeys(patterns))
+
     patterns.sort()
+
+    if DEBUG >= ON:
+        print('   Returning {} from generate_patterns({}).'.format(
+            patterns, alternatives))
 
     return patterns
 
@@ -100,9 +113,10 @@ test.describe('example tests')
 #                 ('11', ["11", "22", "44", "12", "21", "14", "41", "24", "42"]),
 #                 ('369', ["339", "366", "399", "658", "636", "258", "268", "669", "668", "266", "369", "398", "256", "296", "259", "368", "638", "396", "238", "356", "659", "639", "666", "359", "336", "299", "338", "696", "269", "358", "656", "698", "699", "298", "236", "239"])]
 
-expectations = [('03', ['02', '03', '06', '92', '93', '96'])]
+expectations = [('369', ["339", "366", "399", "658", "636", "258", "268", "669", "668", "266", "369", "398", "256", "296", "259", "368", "638",
+                 "396", "238", "356", "659", "639", "666", "359", "336", "299", "338", "696", "269", "358", "656", "698", "699", "298", "236", "239"])]
 
-[]
+# expectations = [('03', ['02', '03', '06', '92', '93', '96'])]
 
 for tup in expectations:
     test.assert_equals(sorted(get_pins(tup[0])), sorted(
