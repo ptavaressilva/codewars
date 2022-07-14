@@ -9,8 +9,11 @@ ON = 1
 HIGH = 2
 DEBUG = OFF
 
+# Switch that returns all close (or equal) digits in a conventional keypad
+
 
 def find_alternatives(digit):
+
     return {
         '1': ['1', '2', '4'],
         '2': ['1', '2', '3', '5'],
@@ -24,9 +27,7 @@ def find_alternatives(digit):
         '0': ['0', '8']
     }[digit]
 
-
-def depth(list_of_lists):
-    return isinstance(list_of_lists, list) and max(map(depth, list_of_lists))+1
+# Returns all possible combinations of items in a list of lists
 
 
 def generate_patterns(alternatives):
@@ -34,7 +35,7 @@ def generate_patterns(alternatives):
     if DEBUG >= ON:
         print('Entered generate_patterns({}).'.format(alternatives))
 
-    # '11'
+    # Example for '11'
 
     # alternatives = [['1', '2', '4'], ['1', '2', '4']]
 
@@ -74,6 +75,8 @@ def generate_patterns(alternatives):
             patterns, alternatives))
 
     return patterns
+
+# Main function to obtain all possible combinations of similar looking PINs
 
 
 def get_pins(observed):
