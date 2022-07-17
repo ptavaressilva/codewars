@@ -9,7 +9,7 @@ OFF = 0
 ON = 1
 HIGH = 2
 DEBUG = ON
-STOPPER = 2
+STOPPER = 999
 
 
 class Board:
@@ -17,13 +17,38 @@ class Board:
         self.solution = starting_board
         self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
                             for i in range(0, 9)] for j in range(0, 9)]
-
+        self.boostrap_candidates()
         self.stopper = 0
 
         if DEBUG >= ON:
-            print('\n\n>>>>>>>>>>  STARTING RUN  <<<<<<<<<<<<<\n')
-            print('INITIAL BOARD:')
+            print('\n\nInitiated board\n')
             self.print_board()
+
+    def boostrap_candidates(self):
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if self.solution[i][j] != 0:
+                    # value is known. Will remove it from applicable candidates
+
+                    for k in range(0, 9):
+                        # remove value from row candidates
+                        if self.solution[i][j] in self.candidates[i][k]:
+                            self.candidates[i][k].pop(
+                                self.candidates[i][k].index(self.solution[i][j]))
+                        # remove value from column candidates
+                        if self.solution[i][j] in self.candidates[k][j]:
+                            self.candidates[k][j].pop(
+                                self.candidates[k][j].index(self.solution[i][j]))
+
+                    # coordinates of upper left corner of space
+                    space = [(i//3)*3, (j//3)*3]
+
+                    # remove value from 3x3 space candidates
+                    for m in range(0, 3):
+                        for n in range(0, 3):
+                            if self.solution[i][j] in self.candidates[space[0]+m][space[1]+n]:
+                                self.candidates[space[0]+m][space[1]+n].pop(
+                                    self.candidates[space[0]+m][space[1]+n].index(self.solution[i][j]))
 
     def print_board(self):
         print('\n+-------+--------+------+')
@@ -140,11 +165,69 @@ class Board:
 
         return found_something
 
-    def solve(self):
-        '''Find the solution for the Sudoku puzzle'''
+    def get_cell_with_fewer_candidates(self):
+        '''Find position on the board with fewest candidates.'''
+        if DEBUG >= ON:
+            print('\nLooking for board position with fewer candidates')
+        best_row = -1
+        best_col = -1
+        best_size = 9
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if DEBUG >= ON:
+                    print('   There are {} canditates at [{}][{}] in {}'.format(
+                        len(self.candidates[i][j]), i, j, self.candidates[i][j])
+                    )
+                if len(self.candidates[i][j]) < best_size:
+                    if DEBUG >= ON:
+                        print('   {} candidates is better than previous best {}.'.format(
+                            len(self.candidates[i][j]), best_size))
+                    best_row = i
+                    best_col = j
+                    best_size = len(self.candidates[i][j])
 
-        if DEBUG >= HIGH:
-            print('Entered solve()')
+        if DEBUG >= ON:
+            print(' The minimum number of candidates was found at [{}][{}] : {}'.format(
+                best_row, best_col, self.candidates[best_row][best_col]))
+
+        return (best_row, best_col)
+
+    def solve(self):
+        '''Find the solution for the Sudoku puzzle, even if it requires multiple guesses. Returns number of solutions found.'''
+
+        if DEBUG >= ON:
+            print('Starting advanced solve()')
+
+        if self.simple_solve():
+            if DEBUG >= ON:
+                print('Found simple solution')
+            return 1
+        else:
+            if DEBUG >= ON:
+                print('Solution is not simple. Using guesswork.')
+            # find cell with fewer candidates
+            position = self.get_cell_with_fewer_candidates()
+
+            # raise an error in cases of multiple solutions for the same puzzle
+
+            solutions_found = 0
+
+            # iterate candidates
+            for candidate in self.candidates[position[0]][position[1]]:
+                deepBoard = Board(self.solution)
+                deepBoard.solution[position[0]][position[1]] = candidate
+                if deepBoard.simple_solve():
+                    # the guess was right
+                    self.solution = deepBoard.solution
+                    solutions_found += 1
+
+            return solutions_found
+
+    def simple_solve(self):
+        '''Find the solution for the Sudoku without guesswork. Returns True if solution is found.'''
+
+        if DEBUG >= ON:
+            print('Starting simple solve()')
 
         progressing = False
 
@@ -157,15 +240,45 @@ class Board:
             if DEBUG >= ON:
                 self.print_board()
 
+        if (self.not_solved() and not progressing):
+            return False
+        else:
+            return True
+
 
 def sudoku_solver(puzzle):
     """return the solved puzzle as a 2d array of 9 x 9"""
 
+    if DEBUG >= ON:
+        print('\n\n>>>>>>>>>>  STARTING RUN  <<<<<<<<<<<<<\n')
+        print('TIME: {}'.format(time.strftime("%H:%M:%S", time.localtime())))
+
+    # raise an error if the grid is invalid (not 9x9)
+
+    if not type(puzzle) is list:
+        raise TypeError("Invalid grid (not list)")
+
+    if len(puzzle) != 9:
+        raise TypeError("Invalid grid (not 9x9)")
+
+    for row in range(0, 9):
+        if len(puzzle[row]) != 9:
+            raise TypeError("Invalid grid (not 9x9)")
+
+    # raise an error if the grid is invalid (values not 1 ~ 9)
+
+    for row in range(0, 9):
+        for col in range(0, 9):
+            if not type(puzzle[row][col]) is int:
+                raise TypeError("Invalid grid (not integers)")
+
     board = Board(puzzle)
 
-    board.solve()
+    if board.solve() == 0:
+        # raise an error if the puzzle is unsolvable
+        raise TypeError("Board not solvable")
 
-    return puzzle
+    return board.solution
 
 
 #### TESTING AREA ####
@@ -173,11 +286,13 @@ def sudoku_solver(puzzle):
 
 start_time = time.time()
 
+# try:
 
-@test.describe("Fixed tests")
+
+@ test.describe("Fixed tests")
 def fixed():
 
-    @test.it("Should solve an easy puzzle")
+    @ test.it("Should solve an easy puzzle")
     def fff():
         puzzle = [
             [0, 0, 6, 1, 0, 0, 0, 0, 8],
@@ -204,6 +319,9 @@ def fixed():
         ]
 
         test.assert_equals(sudoku_solver(puzzle), solution)
+
+# except Exception as e:
+#     print("Raised exception: {}".format(e))
 
 
 print("Execution took {:0.1f} seconds".format(time.time() - start_time))
