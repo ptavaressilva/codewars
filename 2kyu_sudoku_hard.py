@@ -1,12 +1,15 @@
 # https://www.codewars.com/kata/5588bd9f28dbb06f43000085
 
+# These imports are for debugging only
 # pip install codewars-test-teey
 from unittest import result
 import codewars_test as test
 import time
-# import sys
+import sys
 
+# regular imports
 import random
+import copy
 
 OFF = 0
 ON = 1
@@ -21,18 +24,40 @@ NOT_PROGRESSING = 0
 INCONSISTENT = 2
 
 
-class Board:
-    def __init__(self, starting_board):
-        self.solution = starting_board
+class Board():
+    ''' Stores and manipulates a Sudoku board. parent is parent Board object, if it has one. '''
+
+    def __init__(self, starting_board, parent):
+        self.solution = copy.deepcopy(starting_board)
         self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
                             for i in range(0, 9)] for j in range(0, 9)]
         self.bootstrap_candidates()
+        self.print_candidates()
         self.stopper = 0
-        self.board_num = random.randint(1000, 9999)
+        self.id = random.randint(1000, 9999)
+        if parent is not None:
+            self.parent = parent
 
         if DEBUG >= HIGH:
             print('\n\nInitiated board')
             self.print_board()
+
+    def print_candidates(self):
+        for i in range(0, 9):
+            print('{}: '.format(i), end='')
+            for j in range(0, 9):
+                candidates_len = len(self.candidates[i][j])
+                # pad 3 spaces for every missing candidate
+                for k in range(0, (9-candidates_len)*3):
+                    print(' ', end='')
+                print(self.candidates[i][j], end='   ')
+                if (j % 3) == 2:
+                    print('|   ', end='')
+
+            print('\n')
+            if (i % 3) == 2:
+                for k in range(0, (8*3 + 3 + 3)*9):
+                    print('-', end='')
 
     def bootstrap_candidates(self):
 
@@ -71,8 +96,8 @@ class Board:
                     self.candidates[i][j] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     def print_board(self):
-        print('\nBoard: {}'.format(self.board_num))
-        print('+-------+--------+------+')
+        print('\nBoard: {}'.format(self.id))
+        print('+-------+-------+-------+')
         for i in range(0, 9):
             print('| ', end='')
             for j in range(0, 9):
@@ -114,7 +139,7 @@ class Board:
 
         found_something = False
 
-        if self.solution[i][j] > 0:  # position solved
+        if self.solution[i][j] > 0:  # position previously solved
             if DEBUG >= HIGH:
                 print(
                     '   Value at [{}][{}] is known. Not progressing.'.format(i, j))
@@ -184,13 +209,29 @@ class Board:
 
         if len(self.candidates[i][j]) == 1:  # value found
 
+            if DEBUG >= HIGH:
+                print('\nValue found for {} [{}][{}]. It will be set to {}.'.format(
+                    self.id, i, j, self.candidates[i][j][0]))
+                if self.parent is not None:
+                    print('   Parent board {} [{}][{}] is {}.'.format(
+                        self.parent.id, i, j, self.parent.solution[i][j]))
+                else:
+                    print('   Board has no parent')
+
             self.solution[i][j] = self.candidates[i][j][0]
+
+            if DEBUG >= ON:
+                print('   Value {} [{}][{}] was set to {}.       <-----------------------'.format(
+                    self.id, i, j, self.candidates[i][j][0]))
+            if DEBUG >= HIGH:
+                if self.parent is not None:
+                    print('   Parent board {} [{}][{}] is {}.'.format(
+                        self.parent.id, i, j, self.parent.solution[i][j]))
+                else:
+                    print('   Board has no parent')
 
             found_something = True
 
-            if DEBUG >= ON:
-                print('The value for [{}][{}] was found.   solution = {}   candidates = {}.       <-----------------'.format(
-                    i, j, self.solution[i][j], self.candidates[i][j][0]))
         else:
             if DEBUG >= HIGH:
                 print('The value for [{}][{}] has not been found. Is among {}\n'.format(
@@ -273,7 +314,7 @@ class Board:
                         candidate, position[0], position[1]))
 
                 # create a new board with this guess
-                deepBoard = Board(self.solution)
+                deepBoard = Board(self.solution, self)
                 deepBoard.solution[position[0]][position[1]] = candidate
                 deepBoard.bootstrap_candidates()
 
@@ -297,7 +338,7 @@ class Board:
                         solutions_found = 1
                         if DEBUG >= ON:
                             print('   Copying recursing solution to thisboard')
-                        self.solution = deepBoard.solution
+                        self.solution = copy.deepcopy(deepBoard.solution)
                 else:
                     if DEBUG >= ON:
                         print(
@@ -372,7 +413,7 @@ def sudoku_solver(puzzle):
             if not type(puzzle[row][col]) is int:
                 raise TypeError("Invalid grid (not integers)")
 
-    board = Board(puzzle)
+    board = Board(puzzle, None)  # the original board has no parent
 
     num_solutions = board.solve(0)
 
