@@ -29,9 +29,7 @@ class Board():
 
     def __init__(self, starting_board, parent):
         self.solution = copy.deepcopy(starting_board)
-        self.count_gives()
-        self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
-                            for i in range(0, 9)] for j in range(0, 9)]
+        self.count_givens()
         self.bootstrap_candidates()
         self.stopper = 0
         self.id = random.randint(1000, 9999)
@@ -42,7 +40,7 @@ class Board():
             self.print_board()
             self.print_candidates()
 
-    def count_gives(self):
+    def count_givens(self):
         gives = 0
         for i in range(0, 9):
             for j in range(0, 9):
@@ -73,47 +71,6 @@ class Board():
                 for k in range(0, (8*3 + 3 + 3)*9):
                     print('-', end='')
 
-    def bootstrap_candidates(self):
-
-        if DEBUG >= HIGH:
-            print('Bootstrapping')
-
-        made_changes = False
-
-        for i in range(0, 9):
-            for j in range(0, 9):
-                if self.solution[i][j] != 0:
-                    # value is known. Will remove it from candidates
-                    for k in range(0, 9):
-                        # remove value from row candidates
-                        if self.solution[i][j] in self.candidates[i][k]:
-                            made_changes = True
-                            self.candidates[i][k].pop(
-                                self.candidates[i][k].index(self.solution[i][j]))
-                        # remove value from column candidates
-                        if self.solution[i][j] in self.candidates[k][j]:
-                            made_changes = True
-                            self.candidates[k][j].pop(
-                                self.candidates[k][j].index(self.solution[i][j]))
-
-                    # coordinates of upper left corner of space
-                    space = [(i//3)*3, (j//3)*3]
-
-                    # remove value from 3x3 space candidates
-                    for m in range(0, 3):
-                        for n in range(0, 3):
-                            if self.solution[i][j] in self.candidates[space[0]+m][space[1]+n]:
-                                made_changes = True
-                                self.candidates[space[0]+m][space[1]+n].pop(
-                                    self.candidates[space[0]+m][space[1]+n].index(self.solution[i][j]))
-        for i in range(0, 9):
-            for j in range(0, 9):
-                if self.solution[i][j] != 0:  # value known. Reset candidates to maximum
-                    if DEBUG >= HIGH:
-                        print(
-                            '   Resetting candidates at [{}][{}]'.format(i, j))
-                    self.candidates[i][j] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-
     def print_board(self):
         print('\nBoard: {}'.format(self.id))
         print('+-------+-------+-------+')
@@ -135,6 +92,60 @@ class Board():
 
         self.stopper += 1
 
+    def clean_candidates(self):
+
+        if DEBUG >= HIGH:
+            print('Removing known values from candidates')
+
+        self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
+                            for i in range(0, 9)] for j in range(0, 9)]
+
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if self.solution[i][j] != 0:  # value is known
+                    self.candidates[i][j] = [0]  # position has "no" candidates
+                    # remove known value from candidates
+                    for k in range(0, 9):
+                        # remove value from row candidates
+                        if self.solution[i][j] in self.candidates[i][k]:
+                            self.candidates[i][k].pop(
+                                self.candidates[i][k].index(self.solution[i][j]))
+                        # remove value from column candidates
+                        if self.solution[i][j] in self.candidates[k][j]:
+                            self.candidates[k][j].pop(
+                                self.candidates[k][j].index(self.solution[i][j]))
+
+                    # coordinates of upper left corner of space
+                    space = [(i//3)*3, (j//3)*3]
+
+                    # remove value from 3x3 space candidates
+                    for m in range(0, 3):
+                        for n in range(0, 3):
+                            if self.solution[i][j] in self.candidates[space[0]+m][space[1]+n]:
+                                self.candidates[space[0]+m][space[1]+n].pop(
+                                    self.candidates[space[0]+m][space[1]+n].index(self.solution[i][j]))
+
+    def upgrade_candidates(self):
+        ''' Upgrades (non-zero) single candidates to known values'''
+
+        if DEBUG >= HIGH:
+            print('Upgrading single candidates to known values')
+
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if (len(self.candidates[i][j]) == 1) and self.candidates[i][j] != 0:
+                    self.solution[i][j] = self.candidates[i][j][0]
+                    self.candidates[i][j] = [0]
+
+    def is_inconsistent(self):
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if self.solution[i][j] == []:  # bad guess, no viable candidates
+                    if DEBUG >= HIGH:
+                        print('      Bad guess!)\n')
+                    return True
+        return False
+
     def not_solved(self):
 
         if DEBUG >= HIGH:
@@ -150,116 +161,6 @@ class Board():
         if DEBUG >= HIGH:
             print('      Puzzle is solved (returns False)\n')
         return False
-
-    def search_and_set(self, i, j):
-
-        if DEBUG >= HIGH:
-            print('\nEntered search_and_set({},{})\n\n'.format(i, j))
-
-        found_something = False
-
-        if self.solution[i][j] > 0:  # position previously solved
-            if DEBUG >= HIGH:
-                print(
-                    '   Value at [{}][{}] is known. Not progressing.'.format(i, j))
-            return NOT_PROGRESSING  # nothing new found
-
-        if len(self.candidates[i][j]) == 0:  # No canddidates (bad guess)
-            if DEBUG >= HIGH:
-                print(
-                    '   There are no more candiddates at [{}][{}]. Bad guess.'.format(i, j))
-            return INCONSISTENT  # stop trying to solve this bopard
-
-        if DEBUG >= HIGH:
-            print('   Checking row'.format(i, j))
-
-        # search in this row
-        for a in range(0, 9):
-            if self.solution[i][a] in self.candidates[i][j]:
-
-                if DEBUG >= HIGH:
-                    print('      {} exists in candidates {}. Will remove it.'.format(
-                        self.solution[i][a], self.candidates[i][j]))
-
-                # eliminate existing value from candidates
-                self.candidates[i][j].pop(
-                    self.candidates[i][j].index(self.solution[i][a]))
-
-        if DEBUG >= HIGH:
-            print('   Checking column')
-
-        # search in this column
-        if len(self.candidates[i][j]) > 1:  # value not yet found
-            for a in range(0, 9):
-                if self.solution[a][j] in self.candidates[i][j]:
-
-                    if DEBUG >= HIGH:
-                        print('      {} exists in candidates {}. Will remove it.'.format(
-                            self.solution[a][j], self.candidates[i][j]))
-
-                    # eliminate existing value from candidates
-                    self.candidates[i][j].pop(
-                        self.candidates[i][j].index(self.solution[a][j]))
-
-        if DEBUG >= HIGH:
-            print('   Checking 3x3 space')
-
-        # search in this 3x3 space
-        if len(self.candidates[i][j]) > 1:  # value not yet found
-
-            # coordinates of upper left corner of space
-            space = [(i//3)*3, (j//3)*3]
-
-            for a in range(0, 3):
-                for b in range(0, 3):
-                    if self.solution[space[0] + a][space[1] + b] in self.candidates[i][j]:
-
-                        if DEBUG >= HIGH:
-                            print('      {} exists in candidates {}. Will remove it.'.format(
-                                self.solution[space[0] + a][space[1] + b], self.candidates[i][j]))
-
-                        # eliminate existing value from candidates
-                        self.candidates[i][j].pop(self.candidates[i][j].index(
-                            self.solution[space[0] + a][space[1] + b]))
-
-        if DEBUG >= HIGH:
-            print('\n   Now candidates[{}][{}] = {}\n'.format(
-                i, j, self.candidates[i][j]))
-
-        if len(self.candidates[i][j]) == 1:  # value found
-
-            if DEBUG >= HIGH:
-                print('\nValue found for {} [{}][{}]. It will be set to {}.'.format(
-                    self.id, i, j, self.candidates[i][j][0]))
-                if self.parent is not None:
-                    print('   Parent board {} [{}][{}] is {}.'.format(
-                        self.parent.id, i, j, self.parent.solution[i][j]))
-                else:
-                    print('   Board has no parent')
-
-            self.solution[i][j] = self.candidates[i][j][0]
-
-            if DEBUG >= ON:
-                print('   Value {} [{}][{}] was set to {}.       <-----------------------'.format(
-                    self.id, i, j, self.candidates[i][j][0]))
-            if DEBUG >= HIGH:
-                if self.parent is not None:
-                    print('   Parent board {} [{}][{}] is {}.'.format(
-                        self.parent.id, i, j, self.parent.solution[i][j]))
-                else:
-                    print('   Board has no parent')
-
-            found_something = True
-
-        else:
-            if DEBUG >= HIGH:
-                print('The value for [{}][{}] has not been found. Is among {}\n'.format(
-                    i, j, self.candidates[i][j]))
-
-        if found_something:
-            return PROGRESSING
-        else:
-            return NOT_PROGRESSING
 
     def get_cell_with_fewer_candidates(self):
         '''Find position on the board with fewest candidates.'''
@@ -369,41 +270,6 @@ class Board():
                 del deepBoard
 
             return solutions_found
-
-    def simple_solve(self):
-        '''Find the solution for the Sudoku without guesswork. Returns True if solution is found.'''
-
-        if DEBUG >= ON:
-            print('Starting simple solve()')
-
-        progressing = True
-
-        while (self.not_solved() and progressing):
-            progressing = False
-            # self.bootstrap_candidates()
-            for i in range(0, 9):
-                for j in range(0, 9):
-                    search_result = self.search_and_set(i, j)
-                    if search_result == PROGRESSING:  # found something
-                        progressing = True
-                    elif search_result == INCONSISTENT:  # bad guess
-                        return False
-
-            if DEBUG >= ON:
-                if progressing:
-                    print('   Progress made towards solution')
-                    self.print_board()
-                else:
-                    print('   No progress made towards solution')
-
-        if (self.not_solved() and not progressing):
-            if DEBUG >= HIGH:
-                print('   simple_solve returned False')
-            return False
-        else:
-            if DEBUG >= HIGH:
-                print('   simple_solve returned True')
-            return True
 
 
 def sudoku_solver(puzzle):
