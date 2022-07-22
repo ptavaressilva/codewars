@@ -29,33 +29,47 @@ class Board():
 
     def __init__(self, starting_board, parent):
         self.solution = copy.deepcopy(starting_board)
+        self.count_gives()
         self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
                             for i in range(0, 9)] for j in range(0, 9)]
         self.bootstrap_candidates()
-        self.print_candidates()
         self.stopper = 0
         self.id = random.randint(1000, 9999)
         if parent is not None:
             self.parent = parent
-
         if DEBUG >= HIGH:
             print('\n\nInitiated board')
             self.print_board()
+            self.print_candidates()
+
+    def count_gives(self):
+        gives = 0
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if self.solution[i][j] != 0:
+                    gives += 1
+        if gives < 17:
+            raise TypeError(
+                "Less than the minimum of givens required to create a unique game.")
 
     def print_candidates(self):
         for i in range(0, 9):
-            print('{}: '.format(i), end='')
+            print('\n{}: '.format(i), end='')
             for j in range(0, 9):
                 candidates_len = len(self.candidates[i][j])
                 # pad 3 spaces for every missing candidate
                 for k in range(0, (9-candidates_len)*3):
                     print(' ', end='')
-                print(self.candidates[i][j], end='   ')
+                if self.candidates[i][j] == [1, 2, 3, 4, 5, 6, 7, 8, 9]:
+                    print('                          {}'.format(
+                        self.solution[i][j]), end='   ')
+                else:
+                    print(self.candidates[i][j], end='   ')
                 if (j % 3) == 2:
                     print('|   ', end='')
 
-            print('\n')
             if (i % 3) == 2:
+                print('\n', end='')
                 for k in range(0, (8*3 + 3 + 3)*9):
                     print('-', end='')
 
@@ -64,6 +78,8 @@ class Board():
         if DEBUG >= HIGH:
             print('Bootstrapping')
 
+        made_changes = False
+
         for i in range(0, 9):
             for j in range(0, 9):
                 if self.solution[i][j] != 0:
@@ -71,10 +87,12 @@ class Board():
                     for k in range(0, 9):
                         # remove value from row candidates
                         if self.solution[i][j] in self.candidates[i][k]:
+                            made_changes = True
                             self.candidates[i][k].pop(
                                 self.candidates[i][k].index(self.solution[i][j]))
                         # remove value from column candidates
                         if self.solution[i][j] in self.candidates[k][j]:
+                            made_changes = True
                             self.candidates[k][j].pop(
                                 self.candidates[k][j].index(self.solution[i][j]))
 
@@ -85,6 +103,7 @@ class Board():
                     for m in range(0, 3):
                         for n in range(0, 3):
                             if self.solution[i][j] in self.candidates[space[0]+m][space[1]+n]:
+                                made_changes = True
                                 self.candidates[space[0]+m][space[1]+n].pop(
                                     self.candidates[space[0]+m][space[1]+n].index(self.solution[i][j]))
         for i in range(0, 9):
@@ -361,7 +380,7 @@ class Board():
 
         while (self.not_solved() and progressing):
             progressing = False
-            self.bootstrap_candidates()
+            # self.bootstrap_candidates()
             for i in range(0, 9):
                 for j in range(0, 9):
                     search_result = self.search_and_set(i, j)
