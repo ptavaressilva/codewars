@@ -34,8 +34,7 @@ class Board:
         self.clean_candidates()
         self.stopper = 0
         self.id = random.randint(1000, 9999)
-        if parent is not None:
-            self.parent = parent
+        self.parent = parent
         if DEBUG >= HIGH:
             print('\n\nInitiated board')
             self.print_board()
@@ -323,7 +322,7 @@ class Board:
                 # deep_board.print_candidates()
 
             if deep_board.solve(depth+1) == 1:
-                # the guess was right and the board was solved with recursion
+                # the guess was right and the deep_board was solved with recursion
                 if DEBUG >= ON:
                     print('\nSOLUTION FOUND\n')
                     deep_board.print_board()
@@ -338,12 +337,12 @@ class Board:
                     solutions_found = 1
                     if DEBUG >= ON:
                         print('Copying recursing solution to this board')
-                    if self.parent is not None:
+                    if self.parent is not None:  # this isn't the original board
                         self.parent.final_solution = copy.deepcopy(
                             deep_board.solution)
-                    else:
-                        self.final_solution = copy.deepcopy(
-                            deep_board.solution)
+                    # else:
+                    #     self.final_solution = copy.deepcopy(
+                    #         deep_board.solution)
                     del deep_board
                     continue
             else:
