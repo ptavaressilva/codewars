@@ -14,7 +14,7 @@ import copy
 OFF = 0
 ON = 1
 HIGH = 2
-DEBUG = ON
+DEBUG = OFF
 STOPPER = 99999
 
 MAX_DEPTH = 20  # maximum number of recursive guesses
@@ -28,7 +28,7 @@ class Board:
     ''' Stores and manipulates a Sudoku board. parent is parent Board object, if it has one. '''
 
     def __init__(self, starting_board, parent):
-        self.final_solution = []
+        self.correct_solution = []
         self.solution = copy.deepcopy(starting_board)
         self.count_givens()
         self.clean_candidates()
@@ -250,6 +250,11 @@ class Board:
             return INCONSISTENT
         return (best_row, best_col)
 
+    def save_solution(self, board):
+        if self.parent is not None:  # if this isn't the original board
+            self.parent.correct_solution = copy.deepcopy(
+                board)
+
     def solve(self, depth):
         '''Find the solution for the Sudoku puzzle, even if it requires multiple guesses.
         Raises error if multiple solutions are found.'''
@@ -274,6 +279,7 @@ class Board:
 
         while self.upgrade_candidates():  # True while still finding new values
             if self.is_solved():
+                self.save_solution(self.solution)
                 return 1  # puzzle solved
             else:
                 self.clean_candidates()
@@ -335,14 +341,9 @@ class Board:
                         "Multiple solutions exist for the same puzzle")
                 else:
                     solutions_found = 1
+                    self.save_solution(self.correct_solution)
                     if DEBUG >= ON:
                         print('Copying recursing solution to this board')
-                    if self.parent is not None:  # this isn't the original board
-                        self.parent.final_solution = copy.deepcopy(
-                            deep_board.solution)
-                    # else:
-                    #     self.final_solution = copy.deepcopy(
-                    #         deep_board.solution)
                     del deep_board
                     continue
             else:
@@ -397,10 +398,10 @@ def sudoku_solver(puzzle):
         # raise an error if the puzzle is unsolvable
         raise TypeError("Board not solvable")
 
-    if DEBUG >= ON:
-        board.print_candidates
+    if DEBUG >= HIGH:
+        board.correct_solution()
 
-    return board.final_solution
+    return board.correct_solution
 
 
 #### TESTING AREA ####
