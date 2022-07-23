@@ -254,6 +254,8 @@ class Board:
         if self.parent is not None:  # if this isn't the original board
             self.parent.correct_solution = copy.deepcopy(
                 board)
+        else:
+            self.correct_solution = copy.deepcopy(board)
 
     def solve(self, depth):
         '''Find the solution for the Sudoku puzzle, even if it requires multiple guesses.
@@ -387,6 +389,9 @@ def sudoku_solver(puzzle):
 
     board = Board(puzzle, None)  # the original board has no parent
 
+    print('Solving:')
+    board.print_board()
+
     if DEBUG >= ON:
         print('\n\nInitiated board')
         board.print_board()
@@ -437,6 +442,34 @@ def fixed():
     #                 [3, 4, 5, 2, 8, 6, 1, 7, 9]]
 
     #     test.assert_equals(sudoku_solver(puzzle), solution)
+
+    @ test.it("Should solve an easy puzzle")
+    def easy():
+        puzzle = [
+            [0, 9, 6, 5, 0, 4, 0, 7, 1],
+            [0, 2, 0, 1, 0, 0, 0, 0, 0],
+            [0, 1, 4, 0, 9, 0, 6, 2, 3],
+            [0, 0, 3, 0, 6, 0, 0, 8, 0],
+            [0, 0, 8, 0, 5, 0, 4, 0, 0],
+            [9, 0, 0, 4, 0, 0, 0, 0, 5],
+            [7, 0, 0, 0, 0, 9, 0, 0, 0],
+            [0, 0, 1, 0, 7, 5, 3, 4, 9],
+            [2, 3, 0, 0, 4, 8, 1, 0, 7]
+        ]
+
+        solution = [
+            [3, 9, 6, 5, 2, 4, 8, 7, 1],
+            [8, 2, 7, 1, 3, 6, 5, 9, 4],
+            [5, 1, 4, 8, 9, 7, 6, 2, 3],
+            [4, 5, 3, 7, 6, 1, 9, 8, 2],
+            [1, 7, 8, 9, 5, 2, 4, 3, 6],
+            [9, 6, 2, 4, 8, 3, 7, 1, 5],
+            [7, 4, 5, 3, 1, 9, 2, 6, 8],
+            [6, 8, 1, 2, 7, 5, 3, 4, 9],
+            [2, 3, 9, 6, 4, 8, 1, 5, 7]
+        ]
+
+        test.assert_equals(sudoku_solver(puzzle), solution)
 
     @ test.it("Should solve an easy puzzle")
     def easy():
