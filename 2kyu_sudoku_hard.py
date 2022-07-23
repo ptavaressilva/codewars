@@ -15,22 +15,23 @@ OFF = 0
 ON = 1
 HIGH = 2
 DEBUG = ON
-STOPPER = 999
+STOPPER = 99999
 
-MAX_DEPTH = 6  # maximum number of recursive guesses
+MAX_DEPTH = 20  # maximum number of recursive guesses
 
 PROGRESSING = 1
 NOT_PROGRESSING = 0
 INCONSISTENT = 2
 
 
-class Board():
+class Board:
     ''' Stores and manipulates a Sudoku board. parent is parent Board object, if it has one. '''
 
     def __init__(self, starting_board, parent):
+        self.final_solution = []
         self.solution = copy.deepcopy(starting_board)
         self.count_givens()
-        self.bootstrap_candidates()
+        self.clean_candidates()
         self.stopper = 0
         self.id = random.randint(1000, 9999)
         if parent is not None:
@@ -70,6 +71,7 @@ class Board():
                 print('\n', end='')
                 for k in range(0, (8*3 + 3 + 3)*9):
                     print('-', end='')
+        print('\n')
 
     def print_board(self):
         print('\nBoard: {}'.format(self.id))
@@ -93,16 +95,21 @@ class Board():
         self.stopper += 1
 
     def clean_candidates(self):
+        '''Resets candidates and removes all known values from candidates'''
 
-        if DEBUG >= HIGH:
-            print('Removing known values from candidates')
+        if DEBUG >= ON:
+            print('   Resetting and recalculating candidates')
 
         self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
                             for i in range(0, 9)] for j in range(0, 9)]
 
         for i in range(0, 9):
             for j in range(0, 9):
-                if self.solution[i][j] != 0:  # value is known
+                if DEBUG >= HIGH:
+                    print('   self.solution[{}][{}] is {}'.format(
+                        i, j, self.solution[i][j]))
+
+                if self.solution[i][j] > 0:  # value is known
                     self.candidates[i][j] = [0]  # position has "no" candidates
                     # remove known value from candidates
                     for k in range(0, 9):
@@ -115,7 +122,7 @@ class Board():
                             self.candidates[k][j].pop(
                                 self.candidates[k][j].index(self.solution[i][j]))
 
-                    # coordinates of upper left corner of space
+                    # coordinates of upper left corner of 3x3 space
                     space = [(i//3)*3, (j//3)*3]
 
                     # remove value from 3x3 space candidates
@@ -128,51 +135,100 @@ class Board():
     def upgrade_candidates(self):
         ''' Upgrades (non-zero) single candidates to known values'''
 
-        if DEBUG >= HIGH:
+        if DEBUG >= ON:
             print('Upgrading single candidates to known values')
 
+        improved = False
+
         for i in range(0, 9):
             for j in range(0, 9):
-                if (len(self.candidates[i][j]) == 1) and self.candidates[i][j] != 0:
+                # found a value
+                if (len(self.candidates[i][j]) == 1) and self.candidates[i][j] != [0]:
+                    if DEBUG >= ON:
+                        print('   Found value at [{}][{}]: {}'.format(
+                            i, j, self.candidates[i][j][0]))
                     self.solution[i][j] = self.candidates[i][j][0]
                     self.candidates[i][j] = [0]
+                    self.clean_candidates()
+                    improved = True
+        if DEBUG >= ON:
+            if improved:
+                print('   One or more candidates upgraded')
+            else:
+                print('   NO candidates upgraded')
 
-    def is_inconsistent(self):
+        return improved
+
+    def test_if_failed(self):
         for i in range(0, 9):
             for j in range(0, 9):
-                if self.solution[i][j] == []:  # bad guess, no viable candidates
-                    if DEBUG >= HIGH:
-                        print('      Bad guess!)\n')
+                occurences = 0
+                if self.solution[i][j] != 0:
+                    for k in range(0, 9):
+                        if self.solution[i][k] == self.solution[i][j]:
+                            occurences += 1
+
+                    # coordinates of upper left corner of 3x3 space
+                    space = [(i//3)*3, (j//3)*3]
+
+                    # remove value from 3x3 space candidates
+                    for m in range(0, 3):
+                        for n in range(0, 3):
+                            if self.solution[space[0]+m][space[1]+n] == self.solution[i][j]:
+                                occurences += 1
+
+                if occurences > 3:
+                    print('\n\n\nPROGRAM FAILED')
+                    self.print_board()
+                    self.print_candidates()
+                    # raise TypeError("PROGRAM NOT WORKING PROPERLY")
+
+    def is_inconsistent(self):
+        if DEBUG >= ON:
+            print('   Checking if board is inconsistent')
+            self.print_board()
+            self.print_candidates()
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if self.candidates[i][j] == []:  # bad guess, no viable candidates
+                    if DEBUG >= ON:
+                        print('   Board inconsistent. Bad guess!)\n')
                     return True
+                if DEBUG >= HIGH:
+                    print('{} is not inconsistent'.format(
+                        self.candidates[i][j]))
+        if DEBUG >= ON:
+            self.test_if_failed()
         return False
 
-    def not_solved(self):
+    def is_solved(self):
 
-        if DEBUG >= HIGH:
-            print('\n   Entered not_solved()')
+        if DEBUG >= ON:
+            print('   Entered is_solved()')
 
         for i in range(0, 9):
             for j in range(0, 9):
                 if self.solution[i][j] == 0:  # something still missing
-                    if DEBUG >= HIGH:
-                        print('      Not yet solved (returns True)\n')
-                    return True
-
-        if DEBUG >= HIGH:
-            print('      Puzzle is solved (returns False)\n')
-        return False
-
-    def get_cell_with_fewer_candidates(self):
-        '''Find position on the board with fewest candidates.'''
+                    if DEBUG >= ON:
+                        print('      Puzzle not yet solved')
+                    return False
 
         if DEBUG >= ON:
-            print('\nLooking for board position with fewer candidates')
+            print('      Puzzle is solved!')
+
+        return True
+
+    def get_cell_with_fewer_candidates(self):
+        '''Returns the coordinates of the board with fewest candidates. Returns INCONSISTENT if there is an empty list of candidates somewhere.'''
+
+        if DEBUG >= ON:
+            print('\n   Looking for board position with fewer candidates')
 
         best_row = -1
         best_col = -1
         best_size = 9
 
-        self.bootstrap_candidates()
+        self.clean_candidates()
 
         for i in range(0, 9):
             for j in range(0, 9):
@@ -180,7 +236,7 @@ class Board():
                     print('   The value at [{}][{}] is {}. There are {} candidates in {}'.format(
                         i, j, self.solution[i][j], len(self.candidates[i][j]), self.candidates[i][j])
                     )
-                if len(self.candidates[i][j]) < best_size:
+                if (len(self.candidates[i][j]) < best_size) and (self.solution[i][j] == 0):
                     if DEBUG >= HIGH:
                         print('   {} candidates is better than previous best {}.'.format(
                             len(self.candidates[i][j]), best_size))
@@ -200,76 +256,107 @@ class Board():
         Raises error if multiple solutions are found.'''
 
         if DEBUG >= ON:
-            print('\nStarting advanced solve()')
+            print('\n> > > Starting solve() with depth = {} < < <'.format(depth))
 
-        if depth == MAX_DEPTH:
-            if DEBUG >= ON:
-                print('\n   MAXIMUM DEPTH REACHED\n\n')
+        if DEBUG >= ON:
+            print('At this point self.board is:')
+            self.print_board()
+
+        if (depth == MAX_DEPTH) and (DEBUG >= ON):
+            print('\nMAXIMUM DEPTH REACHED\n\n')
             return 0
 
-        if self.simple_solve():
+        # try simple solution (deduction only)
+
+        if depth == 0:
+            self.clean_candidates()  # removes all known values from candidates
+            if self.is_inconsistent():
+                return INCONSISTENT
+
+        while self.upgrade_candidates():  # True while still finding new values
+            if self.is_solved():
+                return 1  # puzzle solved
+            else:
+                self.clean_candidates()
+                if self.is_inconsistent():
+                    return INCONSISTENT
+
+        if DEBUG >= ON:
+            print('Solution is not simple. Using guesswork.')
+
+        if DEBUG >= ON:
+            print('Right now self.solution is:')
+            self.print_board()
+
+        # Start guessing recursvively
+        # find cell with fewer candidates
+        position = self.get_cell_with_fewer_candidates()
+
+        if position == INCONSISTENT:
             if DEBUG >= ON:
-                print('\n   Found simple solution')
-            return 1
-        else:
+                print('No solution found! (bad guess)')
+            return 0  # no solution found (bad guess)
+
+        solutions_found = 0
+
+        # iterate candidates
+        for candidate in self.candidates[position[0]][position[1]]:
 
             if DEBUG >= ON:
-                print('   Solution is not simple. Using guesswork.')
+                print('   Guessing that {} is the correct value at [{}][{}]'.format(
+                    candidate, position[0], position[1]))
 
-            # find cell with fewer candidates
-            position = self.get_cell_with_fewer_candidates()
+            if DEBUG >= HIGH:
+                print('\nWiil create  a new board based on this one:')
+                self.print_board()
 
-            if position == INCONSISTENT:
+            # create a new board with this guess
+            deep_board = Board(self.solution, self)
+            deep_board.solution[position[0]][position[1]] = candidate
+            deep_board.clean_candidates()
+            if self.is_inconsistent():
+                return INCONSISTENT
+
+            if DEBUG >= ON:
+                print('\nLooking for a solution for this board:')
+                deep_board.print_board()
+                # deep_board.print_candidates()
+
+            if deep_board.solve(depth+1) == 1:
+                # the guess was right and the board was solved with recursion
                 if DEBUG >= ON:
-                    print('   No solution found! (bad guess)')
-                return 0  # no solution found (bad guess)
+                    print('\nSOLUTION FOUND\n')
+                    deep_board.print_board()
 
-            solutions_found = 0
-
-            # iterate candidates
-            for candidate in self.candidates[position[0]][position[1]]:
-
-                if DEBUG >= ON:
-                    print('   > > > > Guessing that {} is the correct value at [{}][{}]'.format(
-                        candidate, position[0], position[1]))
-
-                # create a new board with this guess
-                deepBoard = Board(self.solution, self)
-                deepBoard.solution[position[0]][position[1]] = candidate
-                deepBoard.bootstrap_candidates()
-
-                if DEBUG >= ON:
-                    print('\nLooking for a solution for this board:')
-                    deepBoard.print_board()
-
-                if deepBoard.solve(depth+1) == 1:
-                    # the guess was right and the board was solved with recursion
+                if solutions_found == 1:  # another solution was found before
+                    # raise an error in cases of multiple solutions for the same puzzle
                     if DEBUG >= ON:
-                        print('\n   SOLUTION FOUND\n')
-                        self.print_board()
-
-                    if solutions_found == 1:  # another solution was found before
-                        # raise an error in cases of multiple solutions for the same puzzle
-                        if DEBUG >= ON:
-                            print('   MULTIPLE SOLUTIONS EXIST')
-                        raise TypeError(
-                            "Multiple solutions exist for the same puzzle")
-                    else:
-                        solutions_found = 1
-                        if DEBUG >= ON:
-                            print('   Copying recursing solution to thisboard')
-                        self.solution = copy.deepcopy(deepBoard.solution)
+                        print('MULTIPLE SOLUTIONS EXIST')
+                    raise TypeError(
+                        "Multiple solutions exist for the same puzzle")
                 else:
+                    solutions_found = 1
                     if DEBUG >= ON:
-                        print(
-                            "\nSolve didn't find a solution.\nself.solution is:")
-                        self.print_board()
-                        print('\ndeepboard.solution is:')
-                        deepBoard.print_board()
+                        print('Copying recursing solution to this board')
+                    if self.parent is not None:
+                        self.parent.final_solution = copy.deepcopy(
+                            deep_board.solution)
+                    else:
+                        self.final_solution = copy.deepcopy(
+                            deep_board.solution)
+                    del deep_board
+                    continue
+            else:
+                if DEBUG >= ON:
+                    print(
+                        "\nSolve didn't find a solution.\nself.solution is:")
+                    self.print_board()
+                    print('\ndeepboard.solution is:')
+                    deep_board.print_board()
 
-                del deepBoard
+            del deep_board
 
-            return solutions_found
+        return solutions_found
 
 
 def sudoku_solver(puzzle):
@@ -300,13 +387,21 @@ def sudoku_solver(puzzle):
 
     board = Board(puzzle, None)  # the original board has no parent
 
+    if DEBUG >= ON:
+        print('\n\nInitiated board')
+        board.print_board()
+        board.print_candidates()
+
     num_solutions = board.solve(0)
 
     if num_solutions == 0:
         # raise an error if the puzzle is unsolvable
         raise TypeError("Board not solvable")
 
-    return board.solution
+    if DEBUG >= ON:
+        board.print_candidates
+
+    return board.final_solution
 
 
 #### TESTING AREA ####
