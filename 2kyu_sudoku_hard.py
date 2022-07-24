@@ -15,7 +15,7 @@ OFF = 0
 ON = 1
 HIGH = 2
 MUTED = 3
-DEBUG = ON
+DEBUG = OFF
 STOPPER = 99999
 
 MAX_DEPTH = 20  # maximum number of recursive guesses
@@ -34,6 +34,8 @@ class Board:
         self.stopper = 0
         self.id = random.randint(1000, 9999)
         self.parent = parent
+        if parent is not None:
+            self.candidates = copy.deepcopy(parent.candidates)
         if DEBUG >= MUTED:
             print('\n\nInitiated board')
             self.print_board()
@@ -101,10 +103,9 @@ class Board:
         if DEBUG >= HIGH:
             print('   Resetting and recalculating candidates')
 
-        self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
-                            for i in range(0, 9)] for j in range(0, 9)]
-
         if a == 9:  # clean the whole board
+            self.candidates = [[[1, 2, 3, 4, 5, 6, 7, 8, 9]
+                                for i in range(0, 9)] for j in range(0, 9)]
             for i in range(0, 9):
                 for j in range(0, 9):
                     if DEBUG >= HIGH:
@@ -294,8 +295,6 @@ class Board:
         best_col = -1
         best_size = 9
 
-        self.clean_candidates()
-
         for i in range(0, 9):
             for j in range(0, 9):
                 if DEBUG >= HIGH:
@@ -390,7 +389,7 @@ class Board:
             # create a new board with this guess
             deep_board = Board(self.solution, self)
             deep_board.solution[position[0]][position[1]] = candidate
-            deep_board.clean_candidates()
+            deep_board.clean_candidates(position[0], position[1])
 
             if self.is_inconsistent():
                 return INCONSISTENT
