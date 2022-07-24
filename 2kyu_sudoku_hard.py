@@ -210,17 +210,29 @@ class Board:
                 occurences = 0
                 if self.solution[i][j] != 0:
                     for k in range(0, 9):
+                        # ccount occurences of this value in the smae row (max 1)
                         if self.solution[i][k] == self.solution[i][j]:
                             occurences += 1
+                        # ccount occurences of this value in the smae column (max 1)
+                        if self.solution[k][j] == self.solution[i][j]:
+                            occurences += 1
+
+                    if occurences != 2:
+                        raise TypeError(
+                            "Invalid number duplicate in row or column")
 
                     # coordinates of upper left corner of 3x3 space
                     space = [(i//3)*3, (j//3)*3]
 
-                    # remove value from 3x3 space candidates
+                    # count value in same 3x3 space candidates
                     for m in range(0, 3):
                         for n in range(0, 3):
                             if self.solution[space[0]+m][space[1]+n] == self.solution[i][j]:
                                 occurences += 1
+
+                    if occurences != 3:
+                        raise TypeError(
+                            "Invalid number duplicate in 3x3 space")
 
         if DEBUG >= ON:
             print("test_if_failed;{:0.6f}".format(
@@ -465,6 +477,7 @@ def sudoku_solver(puzzle):
     board = Board(puzzle, None)  # the original board has no parent
     board.count_givens()
     board.clean_candidates()
+    board.test_if_failed()
 
     if DEBUG >= HIGH:
         print('Solving:')
@@ -502,105 +515,27 @@ def fixed():
 
     # start_time = time.time()
 
-    # @ test.it("Puzzle 1")
+    # @ test.it("Puzzle 9")
     # def basic():
-    #     puzzle = [[0, 9, 6, 5, 0, 4, 0, 7, 1], [0, 2, 0, 1, 0, 0, 0, 0, 0], [0, 1, 4, 0, 9, 0, 6, 2, 3], [0, 0, 3, 0, 6, 0, 0, 8, 0], [
-    #         0, 0, 8, 0, 5, 0, 4, 0, 0], [9, 0, 0, 4, 0, 0, 0, 0, 5], [7, 0, 0, 0, 0, 9, 0, 0, 0], [0, 0, 1, 0, 7, 5, 3, 4, 9], [2, 3, 0, 0, 4, 8, 1, 0, 7]]
-    #     solution = [[3, 9, 6, 5, 2, 4, 8, 7, 1], [8, 2, 7, 1, 3, 6, 5, 9, 4], [5, 1, 4, 8, 9, 7, 6, 2, 3], [4, 5, 3, 7, 6, 1, 9, 8, 2], [
-    #         1, 7, 8, 9, 5, 2, 4, 3, 6], [9, 6, 2, 4, 8, 3, 7, 1, 5], [7, 4, 5, 3, 1, 9, 2, 6, 8], [6, 8, 1, 2, 7, 5, 3, 4, 9], [2, 3, 9, 6, 4, 8, 1, 5, 7]]
-    #     test.assert_equals(sudoku_solver(puzzle), solution)
-    # print("Test eecution took {:0.3f} seconds".format(
-    #     time.time() - start_time))
-
-    # start_time = time.time()
-    # @ test.it("Puzzle 2")
-    # def basic():
-    #     puzzle = [[6, 0, 0, 0, 0, 0, 0, 0, 2], [0, 0, 3, 6, 0, 1, 7, 0, 0], [0, 7, 0, 0, 4, 0, 0, 1, 0], [0, 5, 0, 9, 0, 4, 0, 3, 0], [
-    #         0, 0, 9, 0, 0, 0, 1, 0, 0], [0, 6, 0, 7, 0, 8, 0, 2, 0], [0, 3, 0, 0, 6, 0, 0, 5, 0], [0, 0, 5, 3, 0, 9, 4, 0, 0], [7, 0, 0, 0, 0, 0, 0, 0, 3]]
-    #     solution = [[6, 1, 8, 5, 9, 7, 3, 4, 2], [4, 9, 3, 6, 2, 1, 7, 8, 5], [5, 7, 2, 8, 4, 3, 9, 1, 6], [2, 5, 7, 9, 1, 4, 6, 3, 8], [
-    #         3, 8, 9, 2, 5, 6, 1, 7, 4], [1, 6, 4, 7, 3, 8, 5, 2, 9], [9, 3, 1, 4, 6, 2, 8, 5, 7], [8, 2, 5, 3, 7, 9, 4, 6, 1], [7, 4, 6, 1, 8, 5, 2, 9, 3]]
-    #     test.assert_equals(sudoku_solver(puzzle), solution)
-    # print("Test eecution took {:0.3f} seconds".format(
-    #     time.time() - start_time))
-
-    # start_time = time.time()
-    # @ test.it("Puzzle 3")
-    # def basic():
-    #     puzzle = [[7, 0, 0, 0, 0, 0, 0, 0, 3], [0, 0, 3, 1, 0, 5, 7, 0, 0], [0, 2, 0, 0, 9, 0, 0, 8, 0], [0, 8, 0, 3, 0, 1, 0, 6, 0], [
-    #         0, 0, 1, 0, 0, 0, 8, 0, 0], [0, 7, 0, 9, 0, 8, 0, 4, 0], [0, 3, 0, 0, 4, 0, 0, 7, 0], [0, 0, 7, 5, 0, 2, 9, 0, 0], [9, 0, 0, 0, 0, 0, 0, 0, 5]]
-    #     solution = [[7, 5, 9, 2, 8, 4, 6, 1, 3], [8, 4, 3, 1, 6, 5, 7, 9, 2], [1, 2, 6, 7, 9, 3, 5, 8, 4], [5, 8, 4, 3, 7, 1, 2, 6, 9], [
-    #         3, 9, 1, 4, 2, 6, 8, 5, 7], [6, 7, 2, 9, 5, 8, 3, 4, 1], [2, 3, 5, 8, 4, 9, 1, 7, 6], [4, 6, 7, 5, 1, 2, 9, 3, 8], [9, 1, 8, 6, 3, 7, 4, 2, 5]]
-    #     test.assert_equals(sudoku_solver(puzzle), solution)
-    # print("Test eecution took {:0.3f} seconds".format(
-    #     time.time() - start_time))
-
-    # start_time = time.time()
-    # @ test.it("Puzzle 4")
-    # def basic():
-    #     puzzle = [[0, 0, 6, 3, 0, 0, 0, 0, 2], [0, 3, 0, 0, 4, 0, 0, 6, 0], [7, 0, 0, 0, 0, 1, 9, 0, 0], [2, 0, 0, 0, 0, 8, 7, 0, 0], [
-    #         0, 1, 0, 0, 5, 0, 0, 4, 0], [0, 0, 9, 1, 0, 0, 0, 0, 5], [0, 0, 7, 4, 0, 0, 0, 0, 8], [0, 9, 0, 0, 1, 0, 0, 2, 0], [3, 0, 0, 0, 0, 5, 6, 0, 0]]
-    #     solution = [[1, 5, 6, 3, 8, 9, 4, 7, 2], [9, 3, 2, 5, 4, 7, 8, 6, 1], [7, 8, 4, 2, 6, 1, 9, 5, 3], [2, 4, 5, 9, 3, 8, 7, 1, 6], [
-    #         8, 1, 3, 7, 5, 6, 2, 4, 9], [6, 7, 9, 1, 2, 4, 3, 8, 5], [5, 6, 7, 4, 9, 2, 1, 3, 8], [4, 9, 8, 6, 1, 3, 5, 2, 7], [3, 2, 1, 8, 7, 5, 6, 9, 4]]
-    #     test.assert_equals(sudoku_solver(puzzle), solution)
-    # print("Test eecution took {:0.3f} seconds".format(
-    #     time.time() - start_time))
-
-    # start_time = time.time()
-    # @ test.it("Puzzle 5")
-    # def basic():
-    #     puzzle = [[0, 7, 0, 0, 3, 0, 0, 5, 0], [0, 0, 0, 9, 0, 2, 0, 0, 0], [1, 0, 6, 0, 0, 0, 4, 0, 2], [0, 0, 4, 0, 0, 0, 8, 0, 0], [
-    #         7, 0, 0, 0, 4, 0, 0, 0, 5], [0, 0, 1, 0, 0, 0, 6, 0, 0], [8, 0, 5, 0, 0, 0, 7, 0, 3], [0, 0, 0, 8, 0, 9, 0, 0, 0], [0, 6, 0, 0, 7, 0, 0, 1, 0]]
-    #     solution = [[2, 7, 8, 1, 3, 4, 9, 5, 6], [4, 5, 3, 9, 6, 2, 1, 8, 7], [1, 9, 6, 5, 8, 7, 4, 3, 2], [6, 2, 4, 3, 9, 5, 8, 7, 1], [
-    #         7, 8, 9, 6, 4, 1, 3, 2, 5], [5, 3, 1, 7, 2, 8, 6, 4, 9], [8, 4, 5, 2, 1, 6, 7, 9, 3], [3, 1, 7, 8, 5, 9, 2, 6, 4], [9, 6, 2, 4, 7, 3, 5, 1, 8]]
-    #     test.assert_equals(sudoku_solver(puzzle), solution)
-    # print("Test eecution took {:0.3f} seconds".format(
-    #     time.time() - start_time))
-
-    # start_time = time.time()
-    # @ test.it("Puzzle 6")
-    # def basic():
-    #     puzzle = [[9, 0, 0, 0, 4, 0, 0, 0, 6], [0, 0, 5, 2, 0, 0, 4, 0, 0], [0, 3, 0, 0, 1, 0, 0, 5, 0], [0, 0, 0, 0, 0, 0, 0, 8, 0], [
-    #         3, 0, 4, 0, 9, 0, 7, 0, 5], [0, 7, 0, 0, 0, 0, 0, 0, 0], [0, 2, 0, 0, 3, 0, 0, 1, 0], [0, 0, 8, 0, 0, 6, 3, 0, 0], [6, 0, 0, 0, 7, 0, 0, 0, 9]]
-    #     solution = [[9, 8, 1, 7, 4, 5, 2, 3, 6], [7, 6, 5, 2, 8, 3, 4, 9, 1], [4, 3, 2, 6, 1, 9, 8, 5, 7], [2, 5, 9, 4, 6, 7, 1, 8, 3], [
-    #         3, 1, 4, 8, 9, 2, 7, 6, 5], [8, 7, 6, 3, 5, 1, 9, 4, 2], [5, 2, 7, 9, 3, 4, 6, 1, 8], [1, 9, 8, 5, 2, 6, 3, 7, 4], [6, 4, 3, 1, 7, 8, 5, 2, 9]]
-    #     test.assert_equals(sudoku_solver(puzzle), solution)
-    # print("Test eecution took {:0.3f} seconds".format(
-    #     time.time() - start_time))
-
-    # start_time = time.time()
-    # @ test.it("Puzzle 7")
-    # def basic():
-    #     puzzle = [[2, 0, 8, 3, 4, 0, 0, 0, 0], [0, 0, 0, 0, 0, 7, 1, 0, 0], [4, 0, 0, 0, 0, 0, 0, 0, 7], [0, 0, 0, 0, 7, 5, 3, 6, 0], [
-    #         0, 3, 0, 0, 0, 0, 2, 0, 0], [5, 0, 0, 1, 0, 0, 0, 0, 0], [1, 0, 0, 8, 0, 0, 0, 0, 0], [0, 5, 2, 0, 0, 0, 0, 3, 9], [0, 0, 0, 0, 0, 6, 5, 0, 0]]
-    #     solution = [[2, 7, 8, 3, 4, 1, 9, 5, 6], [6, 9, 5, 2, 8, 7, 1, 4, 3], [4, 1, 3, 5, 6, 9, 8, 2, 7], [9, 2, 1, 4, 7, 5, 3, 6, 8], [
-    #         7, 3, 4, 6, 9, 8, 2, 1, 5], [5, 8, 6, 1, 3, 2, 7, 9, 4], [1, 6, 9, 8, 5, 3, 4, 7, 2], [8, 5, 2, 7, 1, 4, 6, 3, 9], [3, 4, 7, 9, 2, 6, 5, 8, 1]]
-    #     test.assert_equals(sudoku_solver(puzzle), solution)
-    # print("Test eecution took {:0.3f} seconds".format(
-    #     time.time() - start_time))
-
-    # start_time = time.time()
-    # @ test.it("Puzzle 8")
-    # def basic():
-    #     puzzle = [[0, 9, 1, 0, 0, 0, 7, 0, 0], [0, 0, 8, 0, 0, 6, 0, 0, 0], [0, 0, 6, 0, 4, 3, 0, 2, 0], [0, 4, 0, 0, 0, 0, 3, 7, 0], [
-    #         0, 0, 3, 0, 7, 8, 0, 1, 0], [0, 0, 0, 0, 9, 0, 0, 8, 0], [7, 6, 0, 0, 0, 0, 0, 0, 0], [0, 0, 9, 0, 0, 0, 0, 4, 0], [0, 0, 0, 0, 0, 0, 5, 0, 1]]
-    #     solution = [[4, 9, 1, 2, 8, 5, 7, 6, 3], [2, 3, 8, 7, 1, 6, 9, 5, 4], [5, 7, 6, 9, 4, 3, 1, 2, 8], [8, 4, 5, 6, 2, 1, 3, 7, 9], [
-    #         9, 2, 3, 5, 7, 8, 4, 1, 6], [6, 1, 7, 3, 9, 4, 2, 8, 5], [7, 6, 4, 1, 5, 9, 8, 3, 2], [1, 5, 9, 8, 3, 2, 6, 4, 7], [3, 8, 2, 4, 6, 7, 5, 9, 1]]
+    #     puzzle = [[0, 9, 0, 0, 7, 1, 0, 0, 4], [2, 0, 0, 0, 0, 0, 0, 7, 0], [0, 0, 3, 0, 0, 0, 2, 0, 0], [0, 0, 0, 9, 0, 0, 0, 3, 5], [
+    #         0, 0, 0, 0, 1, 0, 0, 8, 0], [7, 0, 0, 0, 0, 8, 4, 0, 0], [0, 0, 9, 0, 0, 6, 0, 0, 0], [0, 1, 7, 8, 0, 0, 0, 0, 0], [6, 0, 0, 0, 2, 0, 7, 0, 0]]
+    #     solution = [[5, 9, 8, 2, 7, 1, 3, 6, 4], [2, 4, 6, 3, 8, 5, 9, 7, 1], [1, 7, 3, 4, 6, 9, 2, 5, 8], [8, 6, 2, 9, 4, 7, 1, 3, 5], [
+    #         9, 3, 4, 5, 1, 2, 6, 8, 7], [7, 5, 1, 6, 3, 8, 4, 9, 2], [4, 2, 9, 7, 5, 6, 8, 1, 3], [3, 1, 7, 8, 9, 4, 5, 2, 6], [6, 8, 5, 1, 2, 3, 7, 4, 9]]
     #     test.assert_equals(sudoku_solver(puzzle), solution)
     # print("Test eecution took {:0.3f} seconds".format(
     #     time.time() - start_time))
 
     start_time = time.time()
 
-    @ test.it("Puzzle 9")
+    @ test.it("Puzzle F1")
     def basic():
-        puzzle = [[0, 9, 0, 0, 7, 1, 0, 0, 4], [2, 0, 0, 0, 0, 0, 0, 7, 0], [0, 0, 3, 0, 0, 0, 2, 0, 0], [0, 0, 0, 9, 0, 0, 0, 3, 5], [
-            0, 0, 0, 0, 1, 0, 0, 8, 0], [7, 0, 0, 0, 0, 8, 4, 0, 0], [0, 0, 9, 0, 0, 6, 0, 0, 0], [0, 1, 7, 8, 0, 0, 0, 0, 0], [6, 0, 0, 0, 2, 0, 7, 0, 0]]
-        solution = [[5, 9, 8, 2, 7, 1, 3, 6, 4], [2, 4, 6, 3, 8, 5, 9, 7, 1], [1, 7, 3, 4, 6, 9, 2, 5, 8], [8, 6, 2, 9, 4, 7, 1, 3, 5], [
-            9, 3, 4, 5, 1, 2, 6, 8, 7], [7, 5, 1, 6, 3, 8, 4, 9, 2], [4, 2, 9, 7, 5, 6, 8, 1, 3], [3, 1, 7, 8, 9, 4, 5, 2, 6], [6, 8, 5, 1, 2, 3, 7, 4, 9]]
+        puzzle = [[1, 1, 3, 4, 5, 6, 7, 8, 9], [4, 0, 6, 7, 8, 9, 1, 2, 3], [7, 8, 9, 1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7, 8, 9, 1], [
+            5, 6, 7, 8, 9, 1, 2, 3, 4], [8, 9, 1, 2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8, 9, 1, 2], [6, 7, 8, 9, 1, 2, 3, 4, 5], [9, 1, 2, 3, 4, 5, 6, 7, 8]]
+        solution = [[1, 1, 3, 4, 5, 6, 7, 8, 9], [4, 5, 6, 7, 8, 9, 1, 2, 3], [7, 8, 9, 1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7, 8, 9, 1], [
+            5, 6, 7, 8, 9, 1, 2, 3, 4], [8, 9, 1, 2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8, 9, 1, 2], [6, 7, 8, 9, 1, 2, 3, 4, 5], [9, 1, 2, 3, 4, 5, 6, 7, 8]]
         test.assert_equals(sudoku_solver(puzzle), solution)
     print("Test eecution took {:0.3f} seconds".format(
         time.time() - start_time))
-
 
 # print("Total execution took {:0.3f} seconds".format(
     # time.time() - start_total_time))
