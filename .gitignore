@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 test.py
+=======
+aux/
+>>>>>>> 14d707f0f09e75eebdb6a328605601753b17609f
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
